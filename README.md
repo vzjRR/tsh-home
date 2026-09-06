@@ -3,10 +3,14 @@
 The personal site of **Talal Al Ghafri** (`vzjRR`) — the work, the capabilities
 behind it, a contact form and a newsletter.
 
-> **No source links.** This site never references a repository, a source host,
-> or an internal surface such as an admin panel. Only finished, public
-> deliverables may appear as a `liveUrl`. `scripts/qa.mjs` asserts this on every
-> page, so a regression fails the suite rather than shipping.
+> **Two standing rules, both enforced by the test suite.**
+> **No source links** — the site never references a repository, a source host,
+> or an internal surface such as an admin panel; only a finished, public
+> deliverable may appear as a `liveUrl`.
+> **English only** — no Arabic or other non-Latin script in the pages, the
+> markup or the structured data.
+> `scripts/qa.mjs` asserts both on every page, so a regression fails the suite
+> rather than shipping.
 
 ---
 
@@ -41,7 +45,7 @@ npm run preview    # serve the build
 npx wrangler pages dev   # dist/ + functions/ + a local D1: the whole site
 
 npm run check      # astro check — types and template diagnostics
-npm run qa         # 35 behaviour, accessibility and form checks (needs the above)
+npm run qa         # 36 behaviour, accessibility and form checks (needs the above)
 npm run qa:shots   # 20 full-page captures across 10 breakpoints × 2 pages
 npm run logo       # re-cut src/assets/brand/logo.webp + icons from the source
 npm run og         # regenerate public/og.png (the share card)
@@ -52,7 +56,8 @@ npm run og         # regenerate public/og.png (the share card)
 - **`npm run qa`** drives a real browser: the mobile menu (Escape, focus
   movement and return, `inert` behind it), the skip link and focus rings,
   deep links into work rows, heading order, reduced motion, the
-  no-JavaScript render, both forms end to end, and the no-source rule.
+  no-JavaScript render, both forms end to end, and the two standing rules
+  above.
   Form checks skip themselves if the endpoints are not running.
 - **`npm run qa:shots`** serves the build, walks 320 → 2560 px on both pages,
   and writes captures plus a `report.json` to `.qa/` (git-ignored). It fails
@@ -229,17 +234,18 @@ domains, the stack inventory and the Ideas → Systems → Products progression.
 
 ---
 
-## Localisation
+## Language
 
-Copy is separated from components and the CSS uses logical properties
-throughout, so a right-to-left Arabic locale is a `dir` attribute plus a second
-data module — not a rewrite. RTL rendering is verified at 390 px and 1440 px
-with no layout breakage, and the newsletter's Arabic line already carries its
-own `lang`/`dir` on an isolated span.
+**The site is English only.** No Arabic — or any other non-Latin — text appears
+in the rendered pages, the markup, or the structured data, and `scripts/qa.mjs`
+asserts that on every page alongside the no-sources rule, so a regression fails
+the suite rather than shipping. The only `lang` attribute on any page is `en`.
 
-To add Arabic: duplicate `src/data/site.ts` as an `ar` variant, set
-`lang`/`dir` in `Base.astro` from it, and add an Arabic-capable font face
-alongside Geist in `src/styles/fonts.css`.
+The architecture stays locale-capable without any of it being used: copy is
+separated from components in `src/data/`, and the CSS uses logical properties
+throughout, so the layout mirrors correctly under `dir="rtl"` (verified at
+390 px and 1440 px). That is latent capacity, not a plan — adding a second
+locale would mean a second data module and a font that covers its script.
 
 ---
 

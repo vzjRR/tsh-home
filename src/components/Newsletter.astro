@@ -9,6 +9,13 @@ interface Props {
 }
 
 const { source = 'site', index } = Astro.props;
+
+/** What actually arrives — stated plainly, so subscribing is an informed act. */
+const promises = [
+  'New work, when it ships',
+  'What broke, and what it took to fix',
+  'No schedule, no filler, one click to leave',
+];
 ---
 
 <section class="section newsletter" id="newsletter" aria-labelledby="newsletter-title">
@@ -19,7 +26,7 @@ const { source = 'site', index } = Astro.props;
           index={index}
           label="Newsletter"
           title="What I ship, when I ship it."
-          lede="Occasional notes on the systems going out — new work, what broke, and what it took to fix. No schedule, no filler, one click to leave."
+          lede="Occasional notes on the systems going out. Sent when there is something worth sending and not otherwise."
         />
       )
     }
@@ -27,19 +34,25 @@ const { source = 'site', index } = Astro.props;
     <div class="newsletter__body">
       <div class="newsletter__lead" data-reveal>
         {!index && <h2 class="newsletter__heading">Subscribe for the latest.</h2>}
-        {/* The paragraph follows the page direction so it aligns with the
-            column; the span carries the Arabic and its own bidi context. */}
-        <p class="newsletter__arabic">
-          <span lang="ar" dir="rtl">اشترك لآخر الأخبار</span>
-        </p>
         {
           !index && (
             <p class="newsletter__standalone">
-              Occasional notes on the systems going out — what shipped, what broke, and what it took
-              to fix. No schedule, no filler, one click to leave.
+              Occasional notes on the systems going out. Sent when there is something worth sending
+              and not otherwise.
             </p>
           )
         }
+
+        <ul class="newsletter__promises">
+          {
+            promises.map((promise, i) => (
+              <li class="newsletter__promise">
+                <span class="mono newsletter__promise-index">{String(i + 1).padStart(2, '0')}</span>
+                <span>{promise}</span>
+              </li>
+            ))
+          }
+        </ul>
       </div>
 
       <form
@@ -109,18 +122,30 @@ const { source = 'site', index } = Astro.props;
     max-inline-size: 16ch;
   }
 
-  .newsletter__arabic {
-    margin-block-start: var(--space-4);
-    font-size: var(--step-2);
-    line-height: 1.6;
-    letter-spacing: 0;
-    color: var(--gold-200);
-  }
-
   .newsletter__standalone {
     margin-block-start: var(--space-5);
     color: var(--text-secondary);
     max-inline-size: 40ch;
+  }
+
+  .newsletter__promises {
+    margin-block-start: var(--space-6);
+    border-block-start: var(--hairline) solid var(--line);
+    max-inline-size: 40ch;
+  }
+
+  .newsletter__promise {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-block-end: var(--hairline) solid var(--line);
+    font-size: var(--step--1);
+    color: var(--text-secondary);
+  }
+
+  .newsletter__promise-index {
+    color: var(--gold-400);
   }
 
   .newsletter__control {

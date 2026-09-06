@@ -32,8 +32,6 @@ export const site = {
   domain: 'tsh87.com',
 
   name: 'Talal Al Ghafri',
-  /** Arabic form of the name, used for `alternateName` in structured data. */
-  nameArabic: 'طلال الغافري',
   handle: 'vzjRR',
   /** Two lines, set as one block in the hero. */
   nameLines: ['Talal', 'Al Ghafri'] as const,

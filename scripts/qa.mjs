@@ -94,18 +94,34 @@ const page = async (options = {}) => {
   await context.close();
 }
 
-/* ------------------------------------------------- no source references -- */
+/* ------------------------------------ no source references, English only -- */
 {
   const { context, page: p } = await page();
-  const found = [];
-  for (const path of ['/', '/contact', '/contact/sent', '/newsletter/subscribed', '/newsletter/unsubscribed']) {
+  const PAGES = ['/', '/contact', '/contact/sent', '/newsletter/subscribed', '/newsletter/unsubscribed'];
+  const sources = [];
+  const nonEnglish = [];
+
+  for (const path of PAGES) {
     await p.goto(BASE + path, { waitUntil: 'networkidle' });
     const links = await p.evaluate(() => [...document.querySelectorAll('a[href]')].map((a) => a.href));
     const text = await p.evaluate(() => document.body.innerText);
-    links.filter((h) => /github|gitlab|bitbucket/i.test(h)).forEach((h) => found.push(`${path} → ${h}`));
-    if (/github|repositor|source code/i.test(text)) found.push(`${path} → body text`);
+    const html = await p.content();
+
+    links.filter((h) => /github|gitlab|bitbucket/i.test(h)).forEach((h) => sources.push(`${path} → ${h}`));
+    if (/github|repositor|source code/i.test(text)) sources.push(`${path} → body text`);
+
+    // The site is English only: no Arabic (or any other non-Latin) script may
+    // appear in the rendered text, in the markup, or in a lang attribute.
+    if (/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(html)) {
+      nonEnglish.push(`${path} → Arabic script in markup`);
+    }
+    const langs = await p.evaluate(() =>
+      [...document.querySelectorAll('[lang]')].map((el) => el.getAttribute('lang')));
+    langs.filter((l) => l && !/^en\b/i.test(l)).forEach((l) => nonEnglish.push(`${path} → lang="${l}"`));
   }
-  check(`no repository or source reference on any page${found.length ? ` (${found.join(', ')})` : ''}`, found.length === 0);
+
+  check(`no repository or source reference on any page${sources.length ? ` (${sources.join(', ')})` : ''}`, sources.length === 0);
+  check(`every page is English only${nonEnglish.length ? ` (${nonEnglish.join(', ')})` : ''}`, nonEnglish.length === 0);
   await context.close();
 }
 
