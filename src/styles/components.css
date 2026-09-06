@@ -1,0 +1,141 @@
+/* ============================================================================
+   Shared primitives — the small parts that must look identical everywhere.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- button -- */
+
+.button {
+  --button-fg: var(--text-primary);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.9rem 1.4rem;
+  border: var(--hairline) solid var(--line-strong);
+  border-radius: var(--radius-1);
+  color: var(--button-fg);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+
+/* The fill wipes in from the leading edge — one gesture, no glow. */
+.button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gold-leaf);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-3) var(--ease-out);
+}
+
+.button svg {
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.button:hover svg,
+.button:focus-visible svg {
+  transform: translate(2px, -2px);
+}
+
+.button--primary {
+  border-color: var(--gold-edge);
+  color: var(--gold-100);
+}
+
+.button--primary:hover,
+.button--primary:focus-visible {
+  color: var(--ink-900);
+  border-color: transparent;
+}
+
+.button--primary:hover::before,
+.button--primary:focus-visible::before {
+  transform: scaleX(1);
+}
+
+.button--ghost {
+  color: var(--text-secondary);
+}
+
+.button--ghost:hover,
+.button--ghost:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--line-strong);
+}
+
+.button--ghost::before {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.button--ghost:hover::before,
+.button--ghost:focus-visible::before {
+  transform: scaleX(1);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+/* ------------------------------------------------------------------- tag -- */
+
+.tag {
+  display: inline-block;
+  padding: 0.32rem 0.6rem;
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius-1);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ------------------------------------------------------------ text link -- */
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding-block-end: 3px;
+  border-block-end: var(--hairline) solid transparent;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--gold-100);
+  border-block-end-color: var(--gold-edge);
+}
+
+.link svg {
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.link:hover svg {
+  transform: translate(2px, -2px);
+}

@@ -1,0 +1,144 @@
+/* ============================================================================
+   Design tokens — the single source of truth for the visual system.
+   Black · White · Lustrous gold. Everything downstream reads from here.
+   ========================================================================== */
+
+:root {
+  /* --- Ink ---------------------------------------------------------------
+     Layered blacks, not #000. Each step is a surface, not a decoration.     */
+  --ink-900: #050505; /* page */
+  --ink-800: #0a0a0a; /* section alternate */
+  --ink-700: #101010; /* raised plate */
+  --ink-600: #161616; /* hover plate */
+  --ink-500: #1d1d1d; /* pressed / active plate */
+
+  /* --- Paper -------------------------------------------------------------- */
+  --paper-100: #ffffff;
+  --paper-200: #f5f5f5;
+  --paper-300: #ededed;
+
+  /* --- Type ---------------------------------------------------------------
+     Four voices only. More than four is noise.                              */
+  --text-primary: #ededed;
+  --text-secondary: #9b9b9b;
+  --text-tertiary: #6b6b6b;
+  --text-quiet: #4a4a4a;
+
+  /* --- Gold ---------------------------------------------------------------
+     Metallic by gradient, never by glow. Used for index, emphasis, state.   */
+  --gold-100: #f1d27a;
+  --gold-200: #dfc063;
+  --gold-300: #c9a227;
+  --gold-400: #b8860b;
+  --gold-500: #8c6d1f;
+  --gold: var(--gold-300);
+  --gold-leaf: linear-gradient(
+    100deg,
+    var(--gold-500) 0%,
+    var(--gold-100) 28%,
+    var(--gold-300) 52%,
+    var(--gold-100) 74%,
+    var(--gold-400) 100%
+  );
+  --gold-wash: rgba(201, 162, 39, 0.09);
+  --gold-edge: rgba(201, 162, 39, 0.34);
+
+  /* --- Lines --------------------------------------------------------------
+     The grid is drawn, not implied. Hairlines carry the whole layout.       */
+  --line-faint: rgba(255, 255, 255, 0.055);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --hairline: 1px;
+
+  /* --- Typography ---------------------------------------------------------
+     Geist for voice, Geist Mono for instrumentation.                        */
+  --font-sans: 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SF Mono',
+    'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* Fluid scale — 320px → 1600px viewport, clamped at both ends. */
+  --step--2: clamp(0.688rem, 0.67rem + 0.09vw, 0.75rem);
+  --step--1: clamp(0.8rem, 0.77rem + 0.15vw, 0.875rem);
+  --step-0: clamp(0.938rem, 0.9rem + 0.19vw, 1.063rem);
+  --step-1: clamp(1.125rem, 1.05rem + 0.38vw, 1.375rem);
+  --step-2: clamp(1.375rem, 1.24rem + 0.67vw, 1.813rem);
+  --step-3: clamp(1.75rem, 1.5rem + 1.25vw, 2.625rem);
+  --step-4: clamp(2.25rem, 1.8rem + 2.25vw, 3.75rem);
+  --step-5: clamp(3rem, 2.1rem + 4.5vw, 6rem);
+  --display: clamp(3.25rem, 1.2rem + 10.2vw, 10.5rem);
+
+  --tracking-display: -0.045em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-label: 0.16em;
+  --tracking-wide: 0.24em;
+
+  --leading-display: 0.86;
+  --leading-tight: 1.06;
+  --leading-snug: 1.28;
+  --leading-body: 1.62;
+
+  /* --- Space --------------------------------------------------------------
+     A 4px base, but the layout thinks in the larger steps.                  */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --section-y: clamp(4.5rem, 3rem + 7vw, 9.5rem);
+  --gutter: clamp(1.25rem, 0.6rem + 3vw, 4rem);
+  --measure: 62ch;
+  --shell: 1440px;
+  --rail: clamp(0px, -8rem + 12vw, 9rem); /* the numbered index column */
+
+  /* --- Radii --------------------------------------------------------------
+     Near-square. Rounded rectangles are the house style of every template
+     this site is not.                                                       */
+  --radius-0: 0;
+  --radius-1: 2px;
+  --radius-2: 3px;
+  --radius-pill: 999px;
+
+  /* --- Elevation ----------------------------------------------------------
+     Depth comes from the line and the surface, not from a blur.             */
+  --shadow-plate: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  --shadow-lift: 0 18px 48px -28px rgba(0, 0, 0, 0.9);
+
+  /* --- Motion -------------------------------------------------------------
+     Two curves. One says "settle", the other says "respond".                */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 150ms; /* state feedback */
+  --dur-2: 240ms; /* control transitions */
+  --dur-3: 420ms; /* element entrance */
+  --dur-4: 640ms; /* composition entrance */
+  --dur-5: 900ms; /* hero sequence */
+  --stagger: 70ms;
+
+  /* --- Layers ------------------------------------------------------------- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-header: 100;
+  --z-overlay: 200;
+
+  color-scheme: dark;
+}
+
+/* The site is a single, committed dark identity — but the print/forced-colors
+   path still has to be legible, so nothing relies on colour alone. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms;
+    --dur-2: 1ms;
+    --dur-3: 1ms;
+    --dur-4: 1ms;
+    --dur-5: 1ms;
+    --stagger: 0ms;
+  }
+}
