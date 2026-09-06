@@ -132,7 +132,7 @@ export const projects: Project[] = [
     summary:
       'A Discord bot with no commands at all: it watches one channel and turns every qualifying image post into exactly one point.',
     detail:
-      'One point per message that contains an image — never more, however many images are in it — tracked as weekly, monthly and all-time totals that roll over on schedule in Asia/Muscat and archive a snapshot to history. Editing a message re-evaluates it. The bot exposes nothing to Discord; everything is read and administered from a separate panel, which is the only surface with write access.',
+      'One point per message that contains an image — never more, however many images are in it — tracked as weekly, monthly and all-time totals that roll over on schedule in Oman time and archive a snapshot to history. Editing a message re-evaluates it. The bot exposes nothing to Discord; everything is read and administered from a separate panel, which is the only surface with write access.',
     technologies: ['TypeScript', 'discord.js', 'Drizzle ORM', 'SQL', 'Docker', 'Vitest'],
     status: 'Live',
   },

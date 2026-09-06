@@ -33,6 +33,7 @@ const publicDir = join(process.cwd(), 'public');
 const NAME_TOP = 'TALAL';
 const NAME_BOTTOM = 'AL GHAFRI';
 const ROLE = 'Software Development · Systems Engineering';
+const LOCATION = 'Ibri, Oman · GMT+4';
 const META = ['Software Development', 'Discord Systems', 'FiveM Platforms', 'Web & API'];
 const DOMAIN = 'tsh87.com';
 const HANDLE = 'vzjRR';
@@ -61,7 +62,7 @@ body{width:1200px;height:630px;background:#050505;color:#EDEDED;font-family:'Gei
 <div class="card">
   <div class="grid"></div>
   <div class="row">
-    <span class="mono quiet">Muscat, Oman · GMT+4</span>
+    <span class="mono quiet">${LOCATION}</span>
     ${mark ? `<img class="seal" src="${mark}" alt="">` : `<span class="mono quiet">${HANDLE}</span>`}
   </div>
   <div>

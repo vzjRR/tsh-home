@@ -45,12 +45,12 @@ export const site = {
     'Applications',
     'Automation',
   ],
-  location: 'Muscat, Oman',
+  location: 'Ibri, Oman',
   timezone: 'GMT+4',
 
   title: 'Talal Al Ghafri — Software Developer & Systems Builder',
   description:
-    'Talal Al Ghafri (vzjRR) builds Discord systems, FiveM platforms, web applications and clinical tooling — from Muscat, Oman.',
+    'Talal Al Ghafri (vzjRR) builds Discord systems, FiveM platforms, web applications and clinical tooling — from Ibri, Oman.',
 
   /** One sentence. It is the first thing a stranger reads about the work. */
   statement:
@@ -117,7 +117,7 @@ export const profile = {
   ],
   /** Fact rows in the profile plate. Every value is checkable. */
   facts: [
-    { label: 'Based', value: 'Muscat, Oman' },
+    { label: 'Based', value: 'Ibri, Oman' },
     { label: 'Handle', value: 'vzjRR' },
     { label: 'Languages', value: 'Arabic · English' },
     { label: 'Writes', value: 'TypeScript · JavaScript · Python · Lua' },
