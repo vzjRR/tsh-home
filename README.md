@@ -1,7 +1,12 @@
 # tsh87.com
 
-The personal site of **Talal Al Ghafri** (`vzjRR`) — a single, static page
-indexing the work, the capabilities behind it, and how to get in touch.
+The personal site of **Talal Al Ghafri** (`vzjRR`) — the work, the capabilities
+behind it, a contact form and a newsletter.
+
+> **No source links.** This site never references a repository, a source host,
+> or an internal surface such as an admin panel. Only finished, public
+> deliverables may appear as a `liveUrl`. `scripts/qa.mjs` asserts this on every
+> page, so a regression fails the suite rather than shipping.
 
 ---
 
@@ -9,17 +14,19 @@ indexing the work, the capabilities behind it, and how to get in touch.
 
 | Choice | Reason |
 | --- | --- |
-| **Astro** (static output) | The page is content. Astro ships it as HTML with no framework runtime, and its content model means new projects, and later articles or case studies, are data rather than components. |
-| **TypeScript** | The content model is typed, so a malformed project entry fails the build instead of the page. |
-| **Hand-authored CSS** with a token layer | A utility framework would have produced a generic result. The design system is ~40 KB of CSS across five files, scoped per component by Astro. |
-| **No UI framework, no animation library, no icon package** | The behaviour that earns its place is ~3 KB of TypeScript; icons are inline SVG. |
+| **Astro** (static output) | The pages are content. Astro ships them as HTML with no framework runtime, and its content model means new work — and later articles or case studies — is data rather than components. |
+| **TypeScript** | The content model and the endpoints are typed, so a malformed entry fails the build instead of the page. |
+| **Hand-authored CSS** with a token layer | A utility framework would have produced a generic result. The design system is six files, scoped per component by Astro. |
+| **Cloudflare Pages Functions + D1** | The forms had to be real. Two endpoints and one small database — no third-party form service, no data leaving the account. |
+| **No UI framework, no animation library, no icon package** | Behaviour is ~7 KB of TypeScript; icons are inline SVG. |
 | **Self-hosted Geist / Geist Mono** | Latin subset, variable, 52 KB for both — no third-party font request on the critical path. |
 
 Two runtime dependencies: `astro` and `@astrojs/sitemap`. Everything else is
 dev-only.
 
-The page scores **100 / 100 / 100 / 100** (performance, accessibility, best
-practices, SEO) on Lighthouse desktop, with a ~174 KB total transfer.
+Both pages score **100 across every Lighthouse category** — performance,
+accessibility, best practices, SEO and agentic browsing — with ~10 KB of
+gzipped CSS and a 0.4 s largest contentful paint.
 
 ---
 
@@ -27,41 +34,86 @@ practices, SEO) on Lighthouse desktop, with a ~174 KB total transfer.
 
 ```bash
 npm install
-npm run dev        # dev server at http://localhost:4321
+npm run dev        # Astro dev server — pages only, no endpoints
 npm run build      # static build to dist/
 npm run preview    # serve the build
+
+npx wrangler pages dev   # dist/ + functions/ + a local D1: the whole site
+
 npm run check      # astro check — types and template diagnostics
-npm run qa:shots   # build first, then capture and audit 10 breakpoints
+npm run qa         # 35 behaviour, accessibility and form checks (needs the above)
+npm run qa:shots   # 20 full-page captures across 10 breakpoints × 2 pages
 npm run og         # regenerate public/og.png (the share card)
 ```
 
-### QA harness
+### QA harnesses
 
-`npm run qa:shots` serves `dist/`, walks 320 → 2560 px, and writes full-page
-screenshots plus a `report.json` to `.qa/` (git-ignored). It fails loudly on
-horizontal overflow, broken images, failed requests and console output. Run it
-after any layout change.
+- **`npm run qa`** drives a real browser: the mobile menu (Escape, focus
+  movement and return, `inert` behind it), the skip link and focus rings,
+  deep links into work rows, heading order, reduced motion, the
+  no-JavaScript render, both forms end to end, and the no-source rule.
+  Form checks skip themselves if the endpoints are not running.
+- **`npm run qa:shots`** serves the build, walks 320 → 2560 px on both pages,
+  and writes captures plus a `report.json` to `.qa/` (git-ignored). It fails
+  on horizontal overflow, broken images, failed requests and console output.
 
 ---
 
-## Deployment
+## The forms
 
-Static output — any static host works. `dist/` is the artefact; there is no
-server, no database and no environment variable to set.
+Both are ordinary HTML forms first. JavaScript upgrades them to submit in
+place and report through a live region; with it off they post normally and the
+endpoint answers with a redirect to a confirmation page. Both paths are
+tested.
 
-For Cloudflare Pages:
+| Endpoint | Does |
+| --- | --- |
+| `POST /api/contact` | Validates, rate-limits, stores in `messages`, optionally notifies Telegram. |
+| `POST /api/subscribe` | Validates, rate-limits, upserts into `subscribers` (re-subscribing reactivates). |
+| `GET /api/subscribe?email=&token=` | The unsubscribe link. Both parts must match. |
+
+Protections, in order: a honeypot field and a time trap (both answered as
+success, so a bot learns nothing), field validation, then a per-sender rate
+limit — 3 messages and 5 sign-ups per hour. The sender's IP is never stored;
+only a salted hash of it, and only to make that limit possible.
+
+### Deployment (Cloudflare Pages)
 
 - **Build command** `npm run build`
 - **Output directory** `dist`
 - **Node version** 20 or newer
 
+Then, once:
+
+1. **Bind the database.** Settings → Functions → D1 bindings: variable name
+   `DB`, database `tsh87-site`. (`wrangler.toml` already declares it for local
+   development. A database id is not a credential — it names the database, it
+   does not grant access to it.)
+2. **Apply the schema** — `npx wrangler d1 execute tsh87-site --remote --file db/schema.sql`.
+   It is idempotent and safe to re-run.
+3. **Set the secrets.** `IP_SALT` is the one that matters; set it to any long
+   random string. `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are optional —
+   set both and every submission also arrives on Telegram.
+
+Nothing is committed but the schema. No key, token or salt is in this repo.
+
+### Reading what comes in
+
+```bash
+npx wrangler d1 execute tsh87-site --remote \
+  --command "SELECT created_at, name, email, topic, message FROM messages ORDER BY created_at DESC LIMIT 20"
+
+npx wrangler d1 execute tsh87-site --remote \
+  --command "SELECT email, created_at FROM subscribers WHERE status='active' ORDER BY created_at DESC"
+```
+
 > **Note on the apex domain.** `tsh87.com` currently serves *Al Ghafri Medical
-> Solutions* (a separate Next.js Worker with its own D1 database). Pointing this
+> Solutions* (a separate Next.js Worker with its own database). Pointing this
 > site at the apex would replace it. Decide the cutover deliberately — a
 > subdomain for one of the two, or a path split — before changing DNS.
 
 `src/data/site.ts` holds the canonical `url`; update it if the site lands
-anywhere other than `https://tsh87.com`, and the canonical link, Open Graph
+anywhere other than `https://tsh87.com` and the canonical link, Open Graph
 tags, structured data and sitemap all follow.
 
 ---
@@ -72,16 +124,24 @@ tags, structured data and sitemap all follow.
 public/                 served as-is
   fonts/                the two self-hosted woff2 files + their licence
   og.png                share card, generated by npm run og
-  favicon.svg, robots.txt, apple-touch-icon.png
+  favicon.svg, apple-touch-icon.png, robots.txt, llms.txt
+db/schema.sql           the D1 tables
+functions/
+  _lib.ts               validation, hashing, rate limits, responses
+  api/contact.ts        POST /api/contact
+  api/subscribe.ts      POST /api/subscribe · GET unsubscribe
 src/
   assets/brand/         ← drop the real logo here (see below)
-  components/           one file per section, plus Logo, Nav, Footer, Plate
+  components/           one file per section, plus Logo, Nav, Footer, Plate, forms
   data/                 all content: site, projects, capabilities, stack, trajectory
   layouts/Base.astro    document shell
-  pages/index.astro     section order — the only place it is declared
-  scripts/main.ts       reveals, scroll-spy, menu, counters, magnetic, deep links
-  styles/               tokens → fonts → base → components
-scripts/                build-og.mjs, screenshots.mjs
+  pages/
+    index.astro         home — section order is declared here and nowhere else
+    contact.astro       the contact page
+    contact/sent.astro, newsletter/*.astro, 404.astro
+  scripts/              main.ts (page behaviour), forms.ts (form behaviour)
+  styles/               tokens → fonts → base → components → forms
+scripts/                build-og.mjs, screenshots.mjs, qa.mjs
 ```
 
 ---
@@ -109,14 +169,18 @@ Append an entry to the array in `src/data/projects.ts`:
   detail: 'The engineering account. Two or three specific sentences.',
   technologies: ['TypeScript', 'PostgreSQL'],
   status: 'Live',
-  github: 'https://github.com/vzjRR/...',   // optional
-  liveUrl: 'https://...',                   // optional
-  featured: true,                           // optional — promotes it to a block
+  liveUrl: 'https://...',      // optional — a public, finished surface only
+  featured: true,              // optional — promotes it to a block
 }
 ```
 
-The featured blocks, the index table, the hero's counter and the capability
-evidence columns all read from that one array. Nothing else needs editing.
+The featured blocks, the index table, the hero's counter, the capability
+evidence columns and the contact form's "Regarding" note all read from that one
+array. Nothing else needs editing.
+
+There is no `github` field, by design. If a project has no public surface it
+simply carries no link — every row still offers **Ask about this**, which opens
+the contact form with that project named.
 
 **Featured entries** can carry a `diagram` — a signal-flow schematic of the
 system, drawn as text on the plate. It exists so a project without a screenshot
@@ -124,8 +188,7 @@ still has a real visual instead of a stand-in image. Add screenshots only when
 they are genuine: put the file in `src/assets/work/` and set `image`.
 
 **Linking a capability to its evidence:** add the project's slug to the
-`evidence` array of the matching entry in `src/data/capabilities.ts`. The link
-scrolls to the row and expands it.
+`evidence` array of the matching entry in `src/data/capabilities.ts`.
 
 ---
 
@@ -133,15 +196,16 @@ scrolls to the row and expands it.
 
 Everything a person would want to change lives in `src/data/site.ts`:
 
-- `site` — name, handle, role, location, statement, title and meta description
+- `site` — name, handle, role, disciplines, location, statement, title and meta
+  description
 - `channels` — the contact list, in display order. Adding `{ id: 'email', … }`
-  makes an email row appear in the contact section automatically
+  makes an email row appear on the contact page and in the footer automatically
 - `profile` — the About copy and the fact rows
 - `contact` — the closing heading, body and availability line
 - `nav` — the section index
 
-`src/data/stack.ts` and `src/data/trajectory.ts` hold the stack inventory and
-the Ideas → Systems → Products progression.
+`src/data/capabilities.ts`, `stack.ts` and `trajectory.ts` hold the capability
+domains, the stack inventory and the Ideas → Systems → Products progression.
 
 ---
 
@@ -150,7 +214,8 @@ the Ideas → Systems → Products progression.
 Copy is separated from components and the CSS uses logical properties
 throughout, so a right-to-left Arabic locale is a `dir` attribute plus a second
 data module — not a rewrite. RTL rendering is verified at 390 px and 1440 px
-with no layout breakage.
+with no layout breakage, and the newsletter's Arabic line already carries its
+own `lang`/`dir` on an isolated span.
 
 To add Arabic: duplicate `src/data/site.ts` as an `ar` variant, set
 `lang`/`dir` in `Base.astro` from it, and add an Arabic-capable font face
@@ -160,13 +225,12 @@ alongside Geist in `src/styles/fonts.css`.
 
 ## Accessibility and motion
 
-Semantic landmarks, one `h1`, no skipped heading levels, a skip link, visible
-gold focus rings, a keyboard-operable menu (Escape closes, focus moves in and
-returns, the rest of the page goes `inert`), and text that meets WCAG AA
-contrast against the page — the two dimmest tokens are pinned at 4.7:1 and
-6.3:1 and are commented as such in `tokens.css`.
+Semantic landmarks, one `h1` per page, no skipped heading levels, a skip link,
+visible gold focus rings, a keyboard-operable menu (Escape closes, focus moves
+in and returns, the rest of the page goes `inert`), form errors announced in a
+live region and tied to their fields with `aria-invalid` and
+`aria-describedby`, and text that meets WCAG AA contrast — the two dimmest
+tokens are pinned at 4.7:1 and 6.3:1 and are commented as such in `tokens.css`.
 
 `prefers-reduced-motion: reduce` disables every entrance, the counters settle
-instantly, and the magnetic cursor effect never initialises. With JavaScript
-off, all 72 revealed elements render in their final state and the work index
-stays readable.
+instantly, and the magnetic cursor effect never initialises.

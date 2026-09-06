@@ -7,6 +7,9 @@
  * viewport. Run `npm run build` first.
  *
  *   node scripts/screenshots.mjs [--url http://host] [--out .qa]
+ *
+ * Point --url at `wrangler pages dev` to capture the pages with their
+ * endpoints live; otherwise it serves dist/ itself.
  */
 
 import { chromium } from 'playwright';
@@ -14,6 +17,8 @@ import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
+
+const ROUTES = ['/', '/contact'];
 
 const BREAKPOINTS = [
   { name: '320-small-phone', width: 320, height: 720 },
@@ -79,7 +84,10 @@ const browser = await chromium.launch(
 );
 const report = [];
 
-for (const bp of BREAKPOINTS) {
+for (const route of ROUTES) {
+  const slug = route === '/' ? 'home' : route.replace(/^\//, '').replace(/\//g, '-');
+
+  for (const bp of BREAKPOINTS) {
   const context = await browser.newContext({
     viewport: { width: bp.width, height: bp.height },
     deviceScaleFactor: 1,
@@ -94,7 +102,7 @@ for (const bp of BREAKPOINTS) {
   page.on('pageerror', (err) => messages.push(`pageerror: ${err.message}`));
   page.on('requestfailed', (req) => failures.push(`${req.url()} — ${req.failure()?.errorText}`));
 
-  await page.goto(`${base}/`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}${route}`, { waitUntil: 'networkidle' });
 
   // Settle entrance animations and force every reveal so the capture shows
   // the page as a reader who has scrolled through it would see it.
@@ -128,10 +136,10 @@ for (const bp of BREAKPOINTS) {
       .map((img) => img.currentSrc || img.src),
   );
 
-  await page.screenshot({ path: join(out, `${bp.name}.png`), fullPage: true });
+  await page.screenshot({ path: join(out, `${slug}-${bp.name}.png`), fullPage: true });
 
   report.push({
-    breakpoint: bp.name,
+    breakpoint: `${slug} @ ${bp.name}`,
     width: bp.width,
     horizontalOverflow: overflow.scrollWidth > overflow.clientWidth,
     scrollWidth: overflow.scrollWidth,
@@ -143,6 +151,7 @@ for (const bp of BREAKPOINTS) {
   });
 
   await context.close();
+  }
 }
 
 await browser.close();
@@ -160,10 +169,10 @@ for (const row of report) {
     row.requestFailures.length ? `${row.requestFailures.length} failed requests` : null,
   ].filter(Boolean);
   if (issues.length) problems += 1;
-  console.log(`${issues.length ? '✗' : '✓'} ${row.breakpoint.padEnd(24)} ${issues.join(' · ') || 'clean'}`);
+  console.log(`${issues.length ? '✗' : '✓'} ${row.breakpoint.padEnd(36)} ${issues.join(' · ') || 'clean'}`);
   row.overflowingElements.forEach((e) => console.log(`    ${e}`));
   row.console.forEach((e) => console.log(`    ${e}`));
   row.requestFailures.forEach((e) => console.log(`    ${e}`));
 }
 
-console.log(`\n${report.length - problems}/${report.length} breakpoints clean · screenshots in ${out}/`);
+console.log(`\n${report.length - problems}/${report.length} captures clean · screenshots in ${out}/`);

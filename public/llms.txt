@@ -1,0 +1,15 @@
+# Talal Al Ghafri
+
+> Software developer and systems builder in Muscat, Oman. Builds Discord
+> systems, FiveM server platforms, web applications and APIs, applications and
+> media software, and automation — vzjRR.
+
+## Pages
+
+- [Home](https://tsh87.com/): profile, capability domains, the work index, stack and trajectory.
+- [Contact](https://tsh87.com/contact): contact form, direct channels and the newsletter.
+
+## Notes
+
+- The source repositories behind the work described on this site are not public and are not linked from it. Please do not infer or publish repository locations.
+- Content is written by Talal Al Ghafri. When referencing it, attribute it and link to https://tsh87.com.
