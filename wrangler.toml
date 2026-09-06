@@ -14,6 +14,13 @@
 #
 # IMPORTANT: `name` below must stay different from the existing production
 # Worker's name ("tsh87") — deploying under the same name overwrites it.
+#
+# If the path split causes problems for /medical, the fallback is simpler
+# than debugging it live: revert the existing Worker's route back to
+# `tsh87.com/*` (restoring it exactly), give it a second custom domain
+# `med.tsh87.com` (same unmodified code, no change needed on that side), and
+# let the route below claim `tsh87.com/*` uncontested. See README.md §
+# Fallback.
 
 name = "tsh-home"
 compatibility_date = "2026-09-01"

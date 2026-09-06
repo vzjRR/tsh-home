@@ -142,6 +142,33 @@ Worker holds which — but the two edits still have to happen in this order, or
    — the one that actually matters — `tsh87.com/medical` still serving the
    clinical platform unchanged.
 
+#### Fallback: if the path split causes problems for the medical platform
+
+Decided in advance, so it's a checklist and not a decision made mid-incident.
+If step 5 or 6 above breaks anything on `/medical` — a redirect that assumes
+it owns the root, a cookie scoped oddly, anything — **don't debug it under a
+live domain**. Reverse the split instead:
+
+1. **Revert the existing Worker's route** back to `tsh87.com/*`. This alone
+   restores the medical platform to exactly how it was before any of this —
+   nothing about that Worker or its code needs to change.
+2. **Give it a subdomain instead**: add `med.tsh87.com` as a second custom
+   domain / route on that same existing Worker, pointing at the same
+   unmodified code. It keeps serving what it already serves — reachable at
+   `med.tsh87.com/medical` with no changes on its side at all. (Optional
+   later cleanup, not required for it to work: that app's own `medicalPath`
+   config could be pointed at `/` so it serves from `med.tsh87.com` root
+   instead of `med.tsh87.com/medical` — that is a change to the *other*
+   project, not this one.)
+3. **This Worker (`tsh-home`) then claims all of `tsh87.com`** — no route
+   split, no specificity to reason about, nothing shared with the other
+   Worker at all.
+
+This fallback needs no code change in this repository — steps 1 and 2 are
+Cloudflare dashboard actions on the *other* Worker. The only change here is
+step 3, which is the same `routes` line already in `wrangler.toml`, just
+uncontested this time.
+
 Nothing is committed but the schema. No key, token or salt is in this repo,
 and this repository's own tooling (the Cloudflare MCP connector used to build
 it, and the `wrangler` CLI in this environment) has no deploy or Route/DNS
