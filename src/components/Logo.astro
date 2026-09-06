@@ -1,0 +1,136 @@
+---
+/**
+ * The brand mark.
+ *
+ * Drop a real logo at `src/assets/brand/logo.svg` (or .png / .webp / .avif)
+ * and it is picked up at build time and used everywhere this component is
+ * rendered — no code change, no other file to touch. SVG wins if several
+ * formats are present. Until then, the temporary geometric mark below stands
+ * in; it is deliberately neutral and is not a proposed identity.
+ */
+import { site } from '../data/site';
+
+interface Props {
+  /** `full` pairs the mark with the wordmark; `mark` is the mark alone. */
+  variant?: 'full' | 'mark';
+  /** Mark edge length, in px. */
+  size?: number;
+  class?: string;
+}
+
+const { variant = 'full', size = 26, class: className = '' } = Astro.props;
+
+const supplied = import.meta.glob('../assets/brand/logo.{svg,png,webp,avif,jpg,jpeg}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+
+const rank = ['.svg', '.avif', '.webp', '.png', '.jpg', '.jpeg'];
+const [logoSrc] = Object.entries(supplied)
+  .sort(([a], [b]) => {
+    const ai = rank.findIndex((ext) => a.endsWith(ext));
+    const bi = rank.findIndex((ext) => b.endsWith(ext));
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+  })
+  .map(([, url]) => url);
+---
+
+<span class={`logo ${className}`} data-variant={variant}>
+  {
+    logoSrc ? (
+      <img
+        class="logo__supplied"
+        src={logoSrc}
+        alt={`${site.name} — logo`}
+        width={size}
+        height={size}
+        decoding="async"
+      />
+    ) : (
+      <svg
+        class="logo__mark"
+        width={size}
+        height={size}
+        viewBox="0 0 26 26"
+        fill="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect x="0.5" y="0.5" width="25" height="25" stroke="currentColor" stroke-opacity="0.24" />
+        <path d="M13 4.6 21.4 13 13 21.4 4.6 13 13 4.6Z" stroke="url(#logo-leaf)" stroke-width="1.1" />
+        <path d="M13 9.8 16.2 13 13 16.2 9.8 13 13 9.8Z" fill="url(#logo-leaf)" fill-opacity="0.9" />
+        <defs>
+          <linearGradient id="logo-leaf" x1="4" y1="4" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#8C6D1F" />
+            <stop offset="0.3" stop-color="#F1D27A" />
+            <stop offset="0.62" stop-color="#C9A227" />
+            <stop offset="1" stop-color="#F1D27A" />
+          </linearGradient>
+        </defs>
+      </svg>
+    )
+  }
+  {
+    variant === 'full' && (
+      <span class="logo__word">
+        <span class="logo__name">{site.name}</span>
+        <span class="logo__handle" aria-hidden="true">
+          {site.handle}
+        </span>
+      </span>
+    )
+  }
+  <span class="visually-hidden">{site.name}</span>
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .logo__mark,
+  .logo__supplied {
+    flex: none;
+    display: block;
+  }
+
+  .logo__supplied {
+    inline-size: auto;
+    block-size: auto;
+    max-block-size: 30px;
+    object-fit: contain;
+  }
+
+  .logo__word {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .logo__name {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .logo__handle {
+    font-family: var(--font-mono);
+    font-size: 0.594rem;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--text-quiet);
+  }
+
+  @media (max-width: 30rem) {
+    .logo__word {
+      display: none;
+    }
+  }
+</style>

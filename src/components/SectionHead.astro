@@ -1,0 +1,61 @@
+---
+interface Props {
+  index: string;
+  label: string;
+  title: string;
+  lede?: string;
+  /** Heading level, so the document outline stays honest. */
+  as?: 'h2' | 'h3';
+}
+
+const { index, label, title, lede, as: Tag = 'h2' } = Astro.props;
+---
+
+<div class="head">
+  <p class="head__meta" data-reveal>
+    <span class="mono head__index">{index}</span>
+    <span class="mono head__label">{label}</span>
+    <span class="head__rule" aria-hidden="true"></span>
+  </p>
+  <Tag class="head__title" data-reveal style="--i:1">{title}</Tag>
+  {lede && <p class="lede head__lede" data-reveal style="--i:2">{lede}</p>}
+</div>
+
+<style>
+  .head {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-end: clamp(var(--space-7), 5vw, var(--space-9));
+  }
+
+  .head__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .head__index {
+    color: var(--gold-300);
+  }
+
+  .head__label {
+    color: var(--text-tertiary);
+  }
+
+  .head__rule {
+    flex: 1;
+    block-size: var(--hairline);
+    background: linear-gradient(90deg, var(--line-strong), transparent 88%);
+  }
+
+  .head__title {
+    font-size: var(--step-4);
+    font-weight: 400;
+    letter-spacing: var(--tracking-display);
+    max-inline-size: 20ch;
+  }
+
+  .head__lede {
+    margin-block-start: var(--space-1);
+  }
+</style>

@@ -1,0 +1,37 @@
+---
+import Head from '../components/Head.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  path?: string;
+}
+
+const { title, description, path } = Astro.props;
+---
+
+<!doctype html>
+<html lang={site.lang} dir={site.dir}>
+  <head>
+    <Head title={title} description={description} path={path} />
+    <script is:inline>
+      // Marks the document as scripted before first paint, so entrance
+      // animations only hide content that will actually be revealed.
+      document.documentElement.classList.add('js');
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Nav />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/main';
+    </script>
+  </body>
+</html>

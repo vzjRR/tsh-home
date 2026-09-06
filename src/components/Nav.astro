@@ -1,0 +1,328 @@
+---
+import Logo from './Logo.astro';
+import { nav, site } from '../data/site';
+---
+
+<header class="masthead" data-masthead>
+  <div class="masthead__inner shell">
+    <a class="masthead__brand" href="#top" aria-label={`${site.name} — top of page`}>
+      <Logo />
+    </a>
+
+    <nav class="masthead__nav" aria-label="Sections">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a class="masthead__link" href={item.href} data-spy={item.watches}>
+                <span class="masthead__link-text">{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="masthead__aside">
+      <a class="masthead__github mono" href="https://github.com/vzjRR" rel="me noopener">
+        GitHub
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+          <path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1" />
+        </svg>
+      </a>
+
+      <button
+        class="masthead__toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-menu"
+        data-menu-toggle
+      >
+        <span class="visually-hidden">Menu</span>
+        <span class="masthead__bars" aria-hidden="true"><i></i><i></i></span>
+      </button>
+    </div>
+  </div>
+  <div class="masthead__rule" aria-hidden="true"></div>
+</header>
+
+<div class="menu" id="site-menu" data-menu>
+  <div class="menu__inner shell">
+    <p class="mono menu__label">Index</p>
+    <ul class="menu__list">
+      {
+        nav.map((item, i) => (
+          <li style={`--i:${i}`}>
+            <a href={item.href} data-menu-link>
+              <span class="mono menu__index">{String(i + 1).padStart(2, '0')}</span>
+              <span class="menu__text">{item.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="menu__foot">
+      <p class="mono">{site.location} · {site.timezone}</p>
+      <a class="mono" href="https://github.com/vzjRR" rel="me noopener">github.com/vzjRR</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .masthead {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: var(--z-header);
+    --header-h: 68px;
+  }
+
+  .masthead::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink-900) 78%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    opacity: 0;
+    transition: opacity var(--dur-2) var(--ease-out);
+  }
+
+  .masthead[data-scrolled]::before {
+    opacity: 1;
+  }
+
+  .masthead__inner {
+    position: relative;
+    block-size: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .masthead__rule {
+    position: relative;
+    block-size: var(--hairline);
+    background: var(--line);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur-3) var(--ease-out);
+  }
+
+  .masthead[data-scrolled] .masthead__rule {
+    transform: scaleX(1);
+  }
+
+  .masthead__brand {
+    display: inline-flex;
+    padding-block: var(--space-2);
+  }
+
+  /* ------------------------------------------------------------- desktop -- */
+
+  .masthead__nav {
+    display: none;
+  }
+
+  .masthead__nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(var(--space-4), 2vw, var(--space-6));
+  }
+
+  .masthead__link {
+    position: relative;
+    display: inline-block;
+    padding-block: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .masthead__link::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: var(--hairline);
+    background: var(--gold-300);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .masthead__link:hover,
+  .masthead__link[aria-current='true'] {
+    color: var(--text-primary);
+  }
+
+  .masthead__link:hover::after,
+  .masthead__link[aria-current='true']::after {
+    transform: scaleX(1);
+  }
+
+  .masthead__aside {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  .masthead__github {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-tertiary);
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .masthead__github:hover {
+    color: var(--gold-100);
+  }
+
+  /* -------------------------------------------------------------- toggle -- */
+
+  .masthead__toggle {
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    border: var(--hairline) solid var(--line-strong);
+    border-radius: var(--radius-1);
+    inline-size: 42px;
+    block-size: 34px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-1) var(--ease-out),
+      background-color var(--dur-1) var(--ease-out);
+  }
+
+  .masthead__toggle:hover {
+    border-color: var(--gold-edge);
+    background: var(--gold-wash);
+  }
+
+  .masthead__bars {
+    inline-size: 16px;
+    display: grid;
+    gap: 4px;
+  }
+
+  .masthead__bars i {
+    display: block;
+    block-size: var(--hairline);
+    background: var(--text-primary);
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .masthead__toggle[aria-expanded='true'] .masthead__bars i:first-child {
+    transform: translateY(2.5px) rotate(45deg);
+  }
+
+  .masthead__toggle[aria-expanded='true'] .masthead__bars i:last-child {
+    transform: translateY(-2.5px) rotate(-45deg);
+  }
+
+  /* ---------------------------------------------------------- menu panel -- */
+
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-header) - 1);
+    background: var(--ink-900);
+    display: grid;
+    align-items: center;
+    opacity: 0;
+    transition:
+      opacity var(--dur-3) var(--ease-out),
+      visibility var(--dur-3);
+    visibility: hidden;
+  }
+
+  .menu[data-open] {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .menu__inner {
+    padding-block: calc(var(--header-h, 68px) + var(--space-7)) var(--space-7);
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .menu__label {
+    color: var(--text-quiet);
+  }
+
+  .menu__list {
+    display: grid;
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .menu__list li {
+    border-block-end: var(--hairline) solid var(--line);
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+      opacity var(--dur-3) var(--ease-out),
+      transform var(--dur-3) var(--ease-out);
+    transition-delay: calc(var(--i) * 45ms + 90ms);
+  }
+
+  .menu[data-open] .menu__list li {
+    opacity: 1;
+    transform: none;
+  }
+
+  .menu__list a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-5);
+    padding-block: var(--space-5);
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .menu__index {
+    color: var(--gold-300);
+  }
+
+  .menu__text {
+    font-size: var(--step-3);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .menu__list a:hover .menu__text {
+    color: var(--gold-100);
+  }
+
+  .menu__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-4);
+    color: var(--text-quiet);
+    padding-block-start: var(--space-5);
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .menu__foot a:hover {
+    color: var(--gold-100);
+  }
+
+  @media (min-width: 60rem) {
+    .masthead__nav,
+    .masthead__github {
+      display: flex;
+    }
+
+    .masthead__toggle,
+    .menu {
+      display: none;
+    }
+  }
+</style>
