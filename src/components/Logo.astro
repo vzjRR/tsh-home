@@ -2,23 +2,26 @@
 /**
  * The brand mark.
  *
- * Drop a real logo at `src/assets/brand/logo.svg` (or .png / .webp / .avif)
- * and it is picked up at build time and used everywhere this component is
- * rendered — no code change, no other file to touch. SVG wins if several
- * formats are present. Until then, the temporary geometric mark below stands
- * in; it is deliberately neutral and is not a proposed identity.
+ * A logo at `src/assets/brand/logo.{svg,webp,avif,png,jpg}` is picked up at
+ * build time and used everywhere this component renders — no code change, no
+ * other file to touch. SVG wins if several formats are present. The temporary
+ * geometric mark below is only the fallback for when none is supplied.
+ *
+ * The supplied mark already contains the wordmark and the handle, so the
+ * handle line beside it is suppressed when one is present rather than
+ * printing `vzjRR` twice.
  */
 import { site } from '../data/site';
 
 interface Props {
   /** `full` pairs the mark with the wordmark; `mark` is the mark alone. */
   variant?: 'full' | 'mark';
-  /** Mark edge length, in px. */
+  /** Mark height, in px. */
   size?: number;
   class?: string;
 }
 
-const { variant = 'full', size = 26, class: className = '' } = Astro.props;
+const { variant = 'full', size = 40, class: className = '' } = Astro.props;
 
 const supplied = import.meta.glob('../assets/brand/logo.{svg,png,webp,avif,jpg,jpeg}', {
   eager: true,
@@ -36,7 +39,7 @@ const [logoSrc] = Object.entries(supplied)
   .map(([, url]) => url);
 ---
 
-<span class={`logo ${className}`} data-variant={variant}>
+<span class={`logo ${className}`} data-variant={variant} style={`--mark: ${size}px`}>
   {
     logoSrc ? (
       <img
@@ -75,9 +78,11 @@ const [logoSrc] = Object.entries(supplied)
     variant === 'full' && (
       <span class="logo__word">
         <span class="logo__name">{site.name}</span>
-        <span class="logo__handle" aria-hidden="true">
-          {site.handle}
-        </span>
+        {!logoSrc && (
+          <span class="logo__handle" aria-hidden="true">
+            {site.handle}
+          </span>
+        )}
       </span>
     )
   }
@@ -97,12 +102,11 @@ const [logoSrc] = Object.entries(supplied)
   .logo__supplied {
     flex: none;
     display: block;
+    inline-size: auto;
+    block-size: var(--mark);
   }
 
   .logo__supplied {
-    inline-size: auto;
-    block-size: auto;
-    max-block-size: 30px;
     object-fit: contain;
   }
 

@@ -15,7 +15,7 @@
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 
 const ROUTES = ['/', '/contact'];
@@ -51,6 +51,8 @@ function serve(root, port = 4321) {
     if (path.endsWith('/')) path += 'index.html';
     let file = join(root, path);
     if (!existsSync(file) && existsSync(`${file}.html`)) file = `${file}.html`;
+    // A route like /contact resolves to a directory; serve its index.
+    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
     if (!existsSync(file) || !file.startsWith(root)) {
       res.writeHead(404).end('not found');
       return;

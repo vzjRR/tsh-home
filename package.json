@@ -15,7 +15,8 @@
     "check": "astro check",
     "og": "node scripts/build-og.mjs",
     "qa:shots": "node scripts/screenshots.mjs",
-    "qa": "node scripts/qa.mjs"
+    "qa": "node scripts/qa.mjs",
+    "logo": "node scripts/build-logo.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

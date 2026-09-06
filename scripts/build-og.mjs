@@ -12,6 +12,12 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 
+/** The brand mark, inlined so the card needs nothing but this file. */
+const markPath = 'src/assets/brand/logo.webp';
+const mark = existsSync(markPath)
+  ? `data:image/webp;base64,${(await readFile(markPath)).toString('base64')}`
+  : null;
+
 const MIME = {
   '.woff2': 'font/woff2',
   '.svg': 'image/svg+xml',
@@ -22,10 +28,12 @@ const MIME = {
 
 const publicDir = join(process.cwd(), 'public');
 
+// Mirrors `site.role` and the first of `site.disciplines` in src/data/site.ts.
+// Keep them in step; this script cannot import the TypeScript module.
 const NAME_TOP = 'TALAL';
 const NAME_BOTTOM = 'AL GHAFRI';
-const ROLE = 'Software Developer · Systems Builder';
-const META = ['Discord Systems', 'FiveM Platforms', 'Web & API', 'Automation'];
+const ROLE = 'Software Development · Systems Engineering';
+const META = ['Software Development', 'Discord Systems', 'FiveM Platforms', 'Web & API'];
 const DOMAIN = 'tsh87.com';
 const HANDLE = 'vzjRR';
 
@@ -43,17 +51,18 @@ body{width:1200px;height:630px;background:#050505;color:#EDEDED;font-family:'Gei
 .name{position:relative;line-height:.86;letter-spacing:-.045em;text-transform:uppercase}
 .name b{display:block;font-size:148px;font-weight:600;color:#F5F5F5}
 .name i{display:block;font-size:148px;font-weight:200;font-style:normal;color:#9B9B9B}
-.role{position:relative;color:#DFC063;margin-top:34px}
+.role{position:relative;color:#DFC063;margin-top:34px;margin-bottom:8px}
 .meta{position:relative;display:flex;gap:14px;flex-wrap:wrap}
 .chip{border:1px solid rgba(255,255,255,.09);border-radius:2px;padding:8px 12px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#6B6B6B}
 .mark{position:relative;display:flex;align-items:center;gap:14px}
+.seal{position:relative;height:96px;width:auto;object-fit:contain}
 .dot{width:7px;height:7px;border-radius:99px;background:#DFC063;box-shadow:0 0 0 4px rgba(201,162,39,.09)}
 </style></head><body>
 <div class="card">
   <div class="grid"></div>
   <div class="row">
     <span class="mono quiet">Muscat, Oman · GMT+4</span>
-    <span class="mono quiet">${HANDLE}</span>
+    ${mark ? `<img class="seal" src="${mark}" alt="">` : `<span class="mono quiet">${HANDLE}</span>`}
   </div>
   <div>
     <div class="rule"></div>
