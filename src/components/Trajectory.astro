@@ -1,0 +1,145 @@
+---
+import SectionHead from './SectionHead.astro';
+import { trajectory } from '../data/trajectory';
+---
+
+<section class="section" id="trajectory" aria-labelledby="trajectory-title">
+  <div class="shell">
+    <SectionHead
+      index="04"
+      label="Trajectory"
+      title="Ideas became systems. Systems became products."
+      lede="A technical progression rather than a résumé — what the work was, what it turned into, and where it is now."
+    />
+
+    <ol class="track">
+      {
+        trajectory.map((phase, i) => (
+          <li class="phase" data-reveal style={`--i:${i}`} data-current={phase.current ? 'true' : undefined}>
+            <div class="phase__marker" aria-hidden="true">
+              <span class="phase__node" />
+              <span class="phase__line" />
+            </div>
+            <p class="phase__meta">
+              <span class="mono phase__index">{phase.index}</span>
+              <span class="mono phase__label">{phase.label}</span>
+            </p>
+            <h3 class="phase__title">{phase.title}</h3>
+            <p class="prose phase__body">{phase.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .track {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .phase {
+    position: relative;
+    display: grid;
+    gap: var(--space-4);
+    padding-inline-start: var(--space-7);
+  }
+
+  .phase__marker {
+    position: absolute;
+    inset-block: 0.35rem 0;
+    inset-inline-start: 0;
+    inline-size: 9px;
+  }
+
+  .phase__node {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 9px;
+    block-size: 9px;
+    border: var(--hairline) solid var(--gold-400);
+    border-radius: var(--radius-pill);
+    background: var(--ink-900);
+  }
+
+  .phase[data-current] .phase__node {
+    background: var(--gold-300);
+    box-shadow: 0 0 0 4px var(--gold-wash);
+  }
+
+  .phase__line {
+    position: absolute;
+    inset-block: 14px 0;
+    inset-inline-start: 4px;
+    inline-size: var(--hairline);
+    background: linear-gradient(180deg, var(--line-strong), transparent);
+  }
+
+  .phase:last-child .phase__line {
+    display: none;
+  }
+
+  .phase__meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  .phase__index {
+    color: var(--gold-300);
+  }
+
+  .phase__label {
+    color: var(--text-tertiary);
+  }
+
+  .phase__title {
+    font-size: var(--step-2);
+    font-weight: 400;
+    letter-spacing: var(--tracking-tight);
+    max-inline-size: 24ch;
+  }
+
+  .phase__body {
+    font-size: var(--step--1);
+    line-height: 1.8;
+  }
+
+  @media (min-width: 62rem) {
+    .track {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-8);
+      border-block-start: var(--hairline) solid var(--line);
+      padding-block-start: var(--space-7);
+    }
+
+    .phase {
+      padding-inline-start: 0;
+      align-content: start;
+    }
+
+    .phase__marker {
+      position: absolute;
+      inset-block-start: calc(var(--space-7) * -1 - 5px);
+      inset-inline: 0 auto;
+      inline-size: 100%;
+      block-size: 9px;
+    }
+
+    .phase__line {
+      inset-block: 4px auto;
+      inset-inline: 14px calc(var(--space-8) * -1);
+      inline-size: auto;
+      block-size: var(--hairline);
+      background: linear-gradient(90deg, var(--line-strong), transparent);
+    }
+
+    .phase:last-child .phase__line {
+      display: block;
+      background: linear-gradient(90deg, var(--line-strong), transparent 65%);
+      inset-inline-end: 0;
+    }
+  }
+</style>

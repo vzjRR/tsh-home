@@ -1,0 +1,158 @@
+---
+import SectionHead from './SectionHead.astro';
+import { channels, contact, site } from '../data/site';
+
+const arrow = `<path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1"/>`;
+---
+
+<section class="section" id="contact" aria-labelledby="contact-title">
+  <div class="shell">
+    <SectionHead index="06" label="Contact" title={contact.heading} />
+
+    <div class="contact">
+      <div class="contact__lead">
+        <p class="contact__body" data-reveal>{contact.body}</p>
+        <p class="contact__note mono" data-reveal style="--i:1">
+          <span class="contact__dot" aria-hidden="true"></span>
+          {contact.availability} · {site.location} · {site.timezone}
+        </p>
+      </div>
+
+      <ul class="channels" data-reveal style="--i:1">
+        {
+          channels.map((c, i) => (
+            <li class="channel" style={`--i:${i}`}>
+              <a class="channel__link" href={c.href} rel="me noopener">
+                <span class="mono channel__index">{String(i + 1).padStart(2, '0')}</span>
+                <span class="channel__label">{c.label}</span>
+                <span class="mono channel__handle">{c.handle}</span>
+                {c.note && <span class="channel__note">{c.note}</span>}
+                <span class="channel__arrow" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 9 9" fill="none" set:html={arrow} />
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    display: grid;
+    gap: clamp(var(--space-7), 5vw, var(--space-9));
+  }
+
+  .contact__body {
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-secondary);
+    max-inline-size: 44ch;
+  }
+
+  .contact__note {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block-start: var(--space-6);
+    color: var(--text-quiet);
+  }
+
+  .contact__dot {
+    inline-size: 5px;
+    block-size: 5px;
+    border-radius: var(--radius-pill);
+    background: var(--gold-200);
+    box-shadow: 0 0 0 3px var(--gold-wash);
+  }
+
+  .channels {
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .channel {
+    border-block-end: var(--hairline) solid var(--line);
+  }
+
+  .channel__link {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    padding-block: var(--space-5);
+    transition: padding-inline-start var(--dur-2) var(--ease-out);
+  }
+
+  .channel__index {
+    color: var(--gold-500);
+    transition: color var(--dur-2) var(--ease-out);
+  }
+
+  .channel__label {
+    font-size: var(--step-1);
+    letter-spacing: var(--tracking-tight);
+    transition: color var(--dur-2) var(--ease-out);
+  }
+
+  .channel__handle {
+    color: var(--text-tertiary);
+    justify-self: end;
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .channel__note {
+    grid-column: 2 / -1;
+    font-size: var(--step--1);
+    color: var(--text-quiet);
+  }
+
+  .channel__arrow {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    align-self: center;
+    color: var(--text-quiet);
+    opacity: 0;
+    transform: translate(-4px, 4px);
+    transition:
+      opacity var(--dur-2) var(--ease-out),
+      transform var(--dur-2) var(--ease-out),
+      color var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .channel__link:hover,
+    .channel__link:focus-visible {
+      padding-inline-start: var(--space-3);
+    }
+  }
+
+  .channel__link:hover .channel__label,
+  .channel__link:focus-visible .channel__label {
+    color: var(--gold-100);
+  }
+
+  .channel__link:hover .channel__index,
+  .channel__link:focus-visible .channel__index {
+    color: var(--gold-200);
+  }
+
+  .channel__link:hover .channel__arrow,
+  .channel__link:focus-visible .channel__arrow {
+    opacity: 1;
+    transform: none;
+    color: var(--gold-200);
+  }
+
+  @media (min-width: 62rem) {
+    .contact {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+      align-items: start;
+    }
+  }
+</style>

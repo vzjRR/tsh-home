@@ -1,0 +1,123 @@
+---
+import SectionHead from './SectionHead.astro';
+import { stack } from '../data/stack';
+---
+
+<section class="section" id="stack" aria-labelledby="stack-title">
+  <div class="shell">
+    <SectionHead
+      index="05"
+      label="Stack"
+      title="The instruments, and nothing I have not shipped with."
+      lede="An inventory rather than a wish list. Everything here appears in work in the index above."
+    />
+
+    <div class="stack">
+      {
+        stack.map((group, i) => (
+          <section class="group" data-reveal style={`--i:${i % 3}`} aria-label={group.label}>
+            <p class="group__head">
+              <span class="mono group__index">{group.index}</span>
+              <span class="mono group__label">{group.label}</span>
+              <span class="mono group__count">{String(group.items.length).padStart(2, '0')}</span>
+            </p>
+            <ul class="group__items">
+              {group.items.map((item) => (
+                <li class="group__item">{item}</li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: grid;
+    gap: 0;
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .group {
+    padding-block: var(--space-6);
+    border-block-end: var(--hairline) solid var(--line);
+  }
+
+  .group__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-block-end: var(--space-5);
+  }
+
+  .group__index {
+    color: var(--gold-300);
+  }
+
+  .group__label {
+    color: var(--text-secondary);
+  }
+
+  .group__count {
+    margin-inline-start: auto;
+    color: var(--text-quiet);
+    font-size: 0.625rem;
+  }
+
+  .group__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+
+  .group__item {
+    position: relative;
+    font-size: var(--step--1);
+    color: var(--text-tertiary);
+    padding-inline-start: var(--space-4);
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .group__item::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0.72em;
+    inline-size: 5px;
+    block-size: var(--hairline);
+    background: var(--gold-500);
+    transition: background-color var(--dur-1) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .group__item:hover {
+      color: var(--text-primary);
+    }
+
+    .group__item:hover::before {
+      background-color: var(--gold-200);
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .group {
+      display: grid;
+      grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    .group__head {
+      margin-block-end: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .group__count {
+      margin-inline-start: 0;
+    }
+  }
+</style>

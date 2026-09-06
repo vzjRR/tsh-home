@@ -1,0 +1,88 @@
+---
+import SectionHead from './SectionHead.astro';
+import { profile } from '../data/site';
+---
+
+<section class="section" id="profile" aria-labelledby="profile-title">
+  <div class="shell">
+    <SectionHead index="01" label="Profile" title={profile.heading} />
+
+    <div class="profile">
+      <div class="profile__prose">
+        {
+          profile.paragraphs.map((p, i) => (
+            <p class="prose profile__p" data-reveal style={`--i:${i}`}>
+              {p}
+            </p>
+          ))
+        }
+      </div>
+
+      <dl class="profile__facts" data-reveal style="--i:1">
+        {
+          profile.facts.map((f) => (
+            <div class="profile__fact">
+              <dt class="mono">{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</section>
+
+<style>
+  .profile {
+    display: grid;
+    gap: clamp(var(--space-7), 5vw, var(--space-9));
+  }
+
+  .profile__prose {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .profile__p {
+    max-inline-size: 58ch;
+  }
+
+  /* The first paragraph carries the argument, so it is set larger. */
+  .profile__p:first-child {
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+  }
+
+  .profile__facts {
+    align-self: start;
+    display: grid;
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .profile__fact {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: baseline;
+    padding-block: var(--space-4);
+    border-block-end: var(--hairline) solid var(--line);
+  }
+
+  .profile__fact dt {
+    color: var(--text-quiet);
+  }
+
+  .profile__fact dd {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--text-secondary);
+  }
+
+  @media (min-width: 62rem) {
+    .profile {
+      grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 1fr);
+    }
+  }
+</style>

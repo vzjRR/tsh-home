@@ -1,0 +1,201 @@
+---
+import SectionHead from './SectionHead.astro';
+import { capabilities } from '../data/capabilities';
+import { projects } from '../data/projects';
+
+/** Resolve evidence slugs to titles so a claim can be traced to a build. */
+const titleFor = (slug: string) => projects.find((p) => p.slug === slug)?.title ?? slug;
+---
+
+<section class="section" id="capabilities" aria-labelledby="capabilities-title">
+  <div class="shell">
+    <SectionHead
+      index="02"
+      label="Capabilities"
+      title="What I build, and what it is built out of."
+      lede="Six domains. Each one is backed by work in the index below — the evidence column names it."
+    />
+
+    <ol class="caps">
+      {
+        capabilities.map((cap, i) => (
+          <li class="cap" data-reveal style={`--i:${i % 3}`}>
+            <div class="cap__head">
+              <span class="mono cap__index">{cap.index}</span>
+              <h3 class="cap__title">{cap.title}</h3>
+            </div>
+
+            <div class="cap__body">
+              <p class="cap__summary">{cap.summary}</p>
+              <ul class="cap__items">
+                {cap.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div class="cap__evidence">
+              <span class="mono cap__evidence-label">Evidence</span>
+              {cap.evidence.length > 0 ? (
+                <ul class="cap__evidence-list">
+                  {cap.evidence.map((slug) => (
+                    <li>
+                      <a class="cap__evidence-link" href={`#work-${slug}`}>
+                        {titleFor(slug)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="cap__evidence-none">Private work — not indexed publicly.</p>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  /* Rows, not cards: the section reads as one instrument panel. */
+  .caps {
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .cap {
+    position: relative;
+    display: grid;
+    gap: var(--space-5);
+    padding-block: clamp(var(--space-6), 3vw, var(--space-7));
+    border-block-end: var(--hairline) solid var(--line);
+    transition: background-color var(--dur-2) var(--ease-out);
+  }
+
+  /* A gold rule grows down the leading edge on hover — the only state colour. */
+  .cap::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--space-5) * -1);
+    inline-size: var(--hairline);
+    background: var(--gold-300);
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+    transition: transform var(--dur-3) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .cap:hover {
+      background-color: rgba(255, 255, 255, 0.014);
+    }
+
+    .cap:hover::before {
+      transform: scaleY(1);
+    }
+  }
+
+  .cap__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  .cap__index {
+    color: var(--gold-300);
+  }
+
+  .cap__title {
+    font-size: var(--step-2);
+    font-weight: 400;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .cap__summary {
+    color: var(--text-secondary);
+    max-inline-size: 52ch;
+    margin-block-end: var(--space-5);
+  }
+
+  .cap__items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: var(--space-3) var(--space-5);
+  }
+
+  .cap__items li {
+    position: relative;
+    padding-inline-start: var(--space-4);
+    font-size: var(--step--1);
+    color: var(--text-tertiary);
+    line-height: 1.5;
+  }
+
+  .cap__items li::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0.72em;
+    inline-size: 5px;
+    block-size: var(--hairline);
+    background: var(--gold-500);
+  }
+
+  .cap__evidence {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding-block-start: var(--space-4);
+    border-block-start: var(--hairline) solid var(--line-faint);
+  }
+
+  .cap__evidence-label {
+    color: var(--text-quiet);
+  }
+
+  .cap__evidence-list {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .cap__evidence-link {
+    font-size: var(--step--1);
+    color: var(--text-tertiary);
+    border-block-end: var(--hairline) solid transparent;
+    transition:
+      color var(--dur-1) var(--ease-out),
+      border-color var(--dur-1) var(--ease-out);
+  }
+
+  .cap__evidence-link:hover,
+  .cap__evidence-link:focus-visible {
+    color: var(--gold-100);
+    border-block-end-color: var(--gold-edge);
+  }
+
+  .cap__evidence-none {
+    font-size: var(--step--1);
+    color: var(--text-quiet);
+  }
+
+  @media (min-width: 62rem) {
+    .cap {
+      grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 13rem);
+      gap: var(--space-7);
+      align-items: start;
+    }
+
+    .cap__head {
+      display: grid;
+      gap: var(--space-3);
+      align-content: start;
+    }
+
+    .cap__evidence {
+      padding-block-start: 0;
+      border-block-start: 0;
+      border-inline-start: var(--hairline) solid var(--line-faint);
+      padding-inline-start: var(--space-5);
+    }
+  }
+</style>

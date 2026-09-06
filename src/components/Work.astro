@@ -1,0 +1,389 @@
+---
+import SectionHead from './SectionHead.astro';
+import Plate from './Plate.astro';
+import { projects, featuredProjects, indexedProjects } from '../data/projects';
+
+const numberOf = (slug: string) => String(projects.findIndex((p) => p.slug === slug) + 1).padStart(2, '0');
+
+const arrow = `<path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1"/>`;
+---
+
+<section class="section" id="work" aria-labelledby="work-title">
+  <div class="shell">
+    <SectionHead
+      index="03"
+      label="Selected work"
+      title="Systems that had to run without me standing next to them."
+      lede="Thirteen builds, from a community homepage that survives every upstream going down to a clinical suite that refuses to send anything a nurse types to a server."
+    />
+
+    <!-- Featured -->
+    <div class="featured">
+      {
+        featuredProjects.map((p, i) => (
+          <article class="feature" id={`work-${p.slug}`} data-flip={i % 2 === 1 ? 'true' : 'false'}>
+            <div class="feature__visual" data-reveal>
+              <Plate project={p} index={numberOf(p.slug)} />
+            </div>
+
+            <div class="feature__body">
+              <p class="feature__meta" data-reveal style="--i:1">
+                <span class="mono feature__num">{numberOf(p.slug)}</span>
+                <span class="mono feature__cat">{p.category}</span>
+                <span class="mono feature__status" data-status={p.status}>
+                  {p.status}
+                </span>
+              </p>
+
+              <h3 class="feature__title" data-reveal style="--i:2">
+                {p.title}
+              </h3>
+              <p class="feature__summary" data-reveal style="--i:3">
+                {p.summary}
+              </p>
+              <p class="prose feature__detail" data-reveal style="--i:4">
+                {p.detail}
+              </p>
+
+              <ul class="tags feature__tags" data-reveal style="--i:5">
+                {p.technologies.map((t) => (
+                  <li class="tag">{t}</li>
+                ))}
+              </ul>
+
+              <p class="feature__links" data-reveal style="--i:6">
+                {p.liveUrl && (
+                  <a class="link" href={p.liveUrl} rel="noopener">
+                    Visit
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
+                    <span class="visually-hidden">{p.title}</span>
+                  </a>
+                )}
+                {p.github && (
+                  <a class="link" href={p.github} rel="noopener">
+                    Source
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
+                    <span class="visually-hidden">for {p.title}</span>
+                  </a>
+                )}
+              </p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    <!-- Index -->
+    <h3 class="index__caption mono" data-reveal>The rest of the index</h3>
+    <ul class="index">
+      {
+        indexedProjects.map((p, i) => (
+          <li class="index__row" id={`work-${p.slug}`} data-reveal style={`--i:${i % 4}`}>
+            <details class="index__details">
+              <summary class="index__summary">
+                <span class="mono index__num">{numberOf(p.slug)}</span>
+                <span class="index__name">{p.title}</span>
+                <span class="index__meta">
+                  <span class="mono index__cat">{p.category}</span>
+                  <span class="mono index__status" data-status={p.status}>
+                    {p.status}
+                  </span>
+                </span>
+                <span class="index__chev" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.1" />
+                  </svg>
+                </span>
+              </summary>
+
+              <div class="index__panel">
+                <div class="index__copy">
+                  <p class="index__summary-text">{p.summary}</p>
+                  <p class="prose">{p.detail}</p>
+                  {p.role && (
+                    <p class="mono index__role">
+                      Role — <span>{p.role}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div class="index__side">
+                  <ul class="tags">
+                    {p.technologies.map((t) => (
+                      <li class="tag">{t}</li>
+                    ))}
+                  </ul>
+                  <p class="index__links">
+                    {p.liveUrl && (
+                      <a class="link" href={p.liveUrl} rel="noopener">
+                        Visit
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
+                        <span class="visually-hidden">{p.title}</span>
+                      </a>
+                    )}
+                    {p.github && (
+                      <a class="link" href={p.github} rel="noopener">
+                        Source
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
+                        <span class="visually-hidden">for {p.title}</span>
+                      </a>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </details>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  /* ------------------------------------------------------------ featured -- */
+
+  .featured {
+    display: grid;
+    gap: clamp(var(--space-8), 7vw, var(--space-10));
+    margin-block-end: clamp(var(--space-9), 8vw, var(--space-10));
+  }
+
+  .feature {
+    display: grid;
+    gap: clamp(var(--space-6), 4vw, var(--space-8));
+    align-items: center;
+  }
+
+  .feature__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+    margin-block-end: var(--space-5);
+  }
+
+  .feature__num {
+    color: var(--gold-300);
+  }
+
+  .feature__cat {
+    color: var(--text-tertiary);
+  }
+
+  .feature__status {
+    color: var(--text-quiet);
+    padding-inline-start: var(--space-4);
+    border-inline-start: var(--hairline) solid var(--line);
+  }
+
+  .feature__title {
+    font-size: var(--step-3);
+    font-weight: 400;
+    letter-spacing: var(--tracking-display);
+    margin-block-end: var(--space-4);
+  }
+
+  .feature__summary {
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+    max-inline-size: 46ch;
+    margin-block-end: var(--space-5);
+  }
+
+  .feature__detail {
+    font-size: var(--step--1);
+    line-height: 1.75;
+    max-inline-size: 56ch;
+  }
+
+  .feature__tags {
+    margin-block-start: var(--space-6);
+  }
+
+  .feature__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin-block-start: var(--space-6);
+  }
+
+  /* --------------------------------------------------------------- index -- */
+
+  .index__caption {
+    color: var(--text-quiet);
+    font-weight: 450;
+    margin-block-end: var(--space-5);
+  }
+
+  .index {
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .index__row {
+    border-block-end: var(--hairline) solid var(--line);
+  }
+
+  .index__details {
+    position: relative;
+  }
+
+  .index__summary {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-3) var(--space-4);
+    padding-block: var(--space-5);
+    cursor: pointer;
+    list-style: none;
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .index__meta {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .index__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .index__num {
+    color: var(--gold-500);
+    transition: color var(--dur-2) var(--ease-out);
+  }
+
+  .index__name {
+    min-inline-size: 0;
+    overflow-wrap: break-word;
+    font-size: var(--step-1);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary);
+    transition: color var(--dur-2) var(--ease-out);
+  }
+
+  .index__cat,
+  .index__status {
+    color: var(--text-quiet);
+    white-space: nowrap;
+  }
+
+  .index__chev {
+    grid-row: 1;
+    grid-column: 3;
+    align-self: center;
+    color: var(--text-tertiary);
+    transition:
+      transform var(--dur-3) var(--ease-out),
+      color var(--dur-2) var(--ease-out);
+  }
+
+  .index__details[open] .index__chev {
+    transform: rotate(135deg);
+    color: var(--gold-200);
+  }
+
+  .index__details[open] .index__num,
+  .index__summary:hover .index__num {
+    color: var(--gold-200);
+  }
+
+  .index__summary:hover .index__name {
+    color: var(--gold-100);
+  }
+
+  .index__panel {
+    display: grid;
+    gap: var(--space-6);
+    padding-block: var(--space-2) var(--space-7);
+    animation: panel-in var(--dur-3) var(--ease-out) both;
+  }
+
+  .index__summary-text {
+    font-size: var(--step-0);
+    color: var(--text-primary);
+    max-inline-size: 52ch;
+    margin-block-end: var(--space-4);
+  }
+
+  .index__copy .prose {
+    font-size: var(--step--1);
+    line-height: 1.75;
+  }
+
+  .index__role {
+    color: var(--text-quiet);
+    margin-block-start: var(--space-4);
+  }
+
+  .index__role span {
+    color: var(--text-tertiary);
+  }
+
+  .index__side {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+
+  .index__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+  }
+
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .index__summary {
+      /* Three tracks only: index, title, and one content-sized meta group.
+         Fixed tracks for the category and status labels would let the longest
+         of them overflow the row. */
+      grid-template-columns: 3rem minmax(0, 1fr) auto 1.5rem;
+      align-items: center;
+      column-gap: var(--space-5);
+    }
+
+    .index__meta {
+      grid-column: auto;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      gap: var(--space-5);
+    }
+
+    .index__chev {
+      grid-row: auto;
+      grid-column: auto;
+    }
+
+    .index__panel {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 17rem);
+      gap: var(--space-8);
+      padding-inline-start: 3rem;
+    }
+  }
+
+  @media (min-width: 62rem) {
+    .feature {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: clamp(var(--space-7), 5vw, var(--space-9));
+    }
+
+    .feature[data-flip='true'] .feature__visual {
+      order: 2;
+    }
+  }
+</style>
