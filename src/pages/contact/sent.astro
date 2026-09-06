@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import Notice from '../../components/Notice.astro';
+import { site } from '../../data/site';
+---
+
+<Base
+  noindex
+  path="/contact/sent"
+  title={`Message sent — ${site.name}`}
+  description="Your message has been received."
+>
+  <Notice
+    index="✓"
+    label="Message sent"
+    title="It arrived. Thank you."
+    body="I read everything that comes through and reply to the work I can genuinely take on. If it is urgent, Telegram is the faster route."
+    actionHref="/#work"
+    actionLabel="Back to the work"
+    secondaryHref="https://t.me/iTalalinio"
+    secondaryLabel="Message on Telegram"
+  />
+</Base>

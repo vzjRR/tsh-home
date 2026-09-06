@@ -6,6 +6,11 @@
 
 .button {
   --button-fg: var(--text-primary);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  cursor: pointer;
   position: relative;
   display: inline-flex;
   align-items: center;

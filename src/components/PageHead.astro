@@ -1,0 +1,97 @@
+---
+/** The masthead block for a secondary page. Same furniture as a home-page
+ *  section header, set at page scale. */
+interface Props {
+  index: string;
+  label: string;
+  title: string;
+  lede?: string;
+}
+
+const { index, label, title, lede } = Astro.props;
+---
+
+<header class="pagehead">
+  <div class="shell">
+    <p class="pagehead__meta">
+      <span class="mono pagehead__index">{index}</span>
+      <span class="mono pagehead__label">{label}</span>
+      <span class="pagehead__rule" aria-hidden="true"></span>
+    </p>
+    <h1 class="pagehead__title">{title}</h1>
+    {lede && <p class="lede pagehead__lede">{lede}</p>}
+  </div>
+</header>
+
+<style>
+  .pagehead {
+    padding-block: calc(var(--header-h, 68px) + clamp(3rem, 7vw, 5.5rem))
+      clamp(var(--space-6), 4vw, var(--space-8));
+  }
+
+  .pagehead__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-block-end: var(--space-5);
+    animation: fade-in var(--dur-4) var(--ease-out) both;
+  }
+
+  .pagehead__index {
+    color: var(--gold-300);
+  }
+
+  .pagehead__label {
+    color: var(--text-tertiary);
+  }
+
+  .pagehead__rule {
+    flex: 1;
+    block-size: var(--hairline);
+    background: linear-gradient(90deg, var(--line-strong), transparent 88%);
+  }
+
+  .pagehead__title {
+    font-size: var(--step-5);
+    font-weight: 300;
+    letter-spacing: var(--tracking-display);
+    line-height: 0.98;
+    max-inline-size: 18ch;
+    animation: rise-in var(--dur-5) var(--ease-out) 80ms both;
+  }
+
+  .pagehead__lede {
+    margin-block-start: var(--space-5);
+    animation: rise-in var(--dur-5) var(--ease-out) 200ms both;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pagehead__meta,
+    .pagehead__title,
+    .pagehead__lede {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+</style>

@@ -1,0 +1,246 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import ContactForm from '../components/ContactForm.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { channels, contact, site } from '../data/site';
+import { projects } from '../data/projects';
+
+/** Slug → title, so a link from a work row can name the piece it came from. */
+const workTitles = Object.fromEntries(projects.map((p) => [p.slug, p.title]));
+
+const arrow = `<path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1"/>`;
+---
+
+<Base
+  path="/contact"
+  title={`Contact — ${site.name}`}
+  description="Start a conversation with Talal Al Ghafri about software development, community systems, game-server platforms or an internal tool."
+>
+  <PageHead
+    index="→"
+    label="Contact"
+    title={contact.heading}
+    lede={contact.body}
+  />
+
+  <section class="section section--flush contact-section" aria-labelledby="form-title">
+    <div class="shell contact-page">
+      <div class="contact-page__form">
+        <h2 class="visually-hidden" id="form-title">Send a message</h2>
+
+        <p class="ref-note" data-ref-wrap hidden>
+          <span class="mono ref-note__label">Regarding</span>
+          <span class="ref-note__value" data-ref-note></span>
+        </p>
+
+        <ContactForm />
+      </div>
+
+      <aside class="contact-page__aside" aria-labelledby="direct-title">
+        <h2 class="mono contact-page__aside-title" id="direct-title">Direct</h2>
+        <p class="contact-page__aside-lede">
+          A message through the form reaches me the same way. These are the alternatives if you
+          would rather not use it.
+        </p>
+
+        <ul class="channels">
+          {
+            channels.map((c, i) => (
+              <li class="channel">
+                <a class="channel__link" href={c.href} rel="me noopener">
+                  <span class="mono channel__index">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="channel__label">{c.label}</span>
+                  <span class="mono channel__handle">{c.handle}</span>
+                  <span class="channel__arrow" aria-hidden="true">
+                    <svg width="10" height="10" viewBox="0 0 9 9" fill="none" set:html={arrow} />
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <dl class="contact-page__facts">
+          <div>
+            <dt class="mono">Based</dt>
+            <dd>{site.location} · {site.timezone}</dd>
+          </div>
+          <div>
+            <dt class="mono">Languages</dt>
+            <dd>Arabic · English</dd>
+          </div>
+          <div>
+            <dt class="mono">Availability</dt>
+            <dd>{contact.availability}</dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <Newsletter source="contact" />
+
+  <script type="application/json" id="work-titles" set:html={JSON.stringify(workTitles)} is:inline
+  ></script>
+</Base>
+
+<style>
+  /* The page head already carries the upper rhythm; a full section pad on top
+     of it opens a hole between the lede and the form. */
+  .contact-section {
+    padding-block-start: 0;
+  }
+
+  .contact-page {
+    display: grid;
+    gap: clamp(var(--space-7), 5vw, var(--space-9));
+    align-items: start;
+  }
+
+  .ref-note {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    margin-block-end: var(--space-6);
+    border: var(--hairline) solid var(--line);
+    border-inline-start: 2px solid var(--gold-300);
+    border-radius: var(--radius-1);
+    background: var(--ink-800);
+  }
+
+  .ref-note__label {
+    color: var(--text-quiet);
+  }
+
+  .ref-note__value {
+    color: var(--gold-100);
+  }
+
+  /* ----------------------------------------------------------------- aside -- */
+
+  .contact-page__aside {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+
+  .contact-page__aside-title {
+    color: var(--text-quiet);
+    font-weight: 450;
+    padding-block-end: var(--space-4);
+    border-block-end: var(--hairline) solid var(--line);
+  }
+
+  .contact-page__aside-lede {
+    font-size: var(--step--1);
+    color: var(--text-tertiary);
+    max-inline-size: 38ch;
+  }
+
+  .channels {
+    border-block-start: var(--hairline) solid var(--line);
+  }
+
+  .channel {
+    border-block-end: var(--hairline) solid var(--line);
+  }
+
+  .channel__link {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    padding-block: var(--space-4);
+    transition: padding-inline-start var(--dur-2) var(--ease-out);
+  }
+
+  .channel__index {
+    color: var(--gold-400);
+    transition: color var(--dur-2) var(--ease-out);
+  }
+
+  .channel__label {
+    font-size: var(--step-0);
+    letter-spacing: var(--tracking-tight);
+    transition: color var(--dur-2) var(--ease-out);
+  }
+
+  .channel__handle {
+    text-transform: none;
+    letter-spacing: 0.04em;
+    color: var(--text-tertiary);
+    justify-self: end;
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .channel__arrow {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    color: var(--text-quiet);
+    opacity: 0;
+    transform: translate(-4px, 4px);
+    transition:
+      opacity var(--dur-2) var(--ease-out),
+      transform var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .channel__link:hover,
+    .channel__link:focus-visible {
+      padding-inline-start: var(--space-3);
+    }
+  }
+
+  .channel__link:hover .channel__label,
+  .channel__link:focus-visible .channel__label {
+    color: var(--gold-100);
+  }
+
+  .channel__link:hover .channel__handle,
+  .channel__link:focus-visible .channel__handle {
+    opacity: 0;
+  }
+
+  .channel__link:hover .channel__arrow,
+  .channel__link:focus-visible .channel__arrow {
+    opacity: 1;
+    transform: none;
+    color: var(--gold-200);
+  }
+
+  /* ----------------------------------------------------------------- facts -- */
+
+  .contact-page__facts {
+    display: grid;
+    gap: var(--space-4);
+    margin-block-start: var(--space-3);
+  }
+
+  .contact-page__facts > div {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+
+  .contact-page__facts dt {
+    color: var(--text-quiet);
+  }
+
+  .contact-page__facts dd {
+    margin: 0;
+    font-size: var(--step--1);
+    color: var(--text-secondary);
+  }
+
+  @media (min-width: 62rem) {
+    .contact-page {
+      grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 1fr);
+    }
+  }
+</style>

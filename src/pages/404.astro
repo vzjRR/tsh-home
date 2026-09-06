@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import Notice from '../components/Notice.astro';
+import { site } from '../data/site';
+---
+
+<Base noindex path="/404" title={`Not found — ${site.name}`} description="That page does not exist.">
+  <Notice
+    index="404"
+    label="Not found"
+    title="There is nothing at this address."
+    body="The page was moved, renamed, or never existed. The work index is the best place to pick the thread back up."
+    actionHref="/#work"
+    actionLabel="Go to the work"
+    secondaryHref="/contact"
+    secondaryLabel="Send a message"
+  />
+</Base>

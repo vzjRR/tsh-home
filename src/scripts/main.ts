@@ -1,11 +1,15 @@
 /**
- * Behaviour. About 3 KB of it, and every piece earns its place:
+ * Behaviour. About 7 KB with the forms, and every piece earns its place:
  * entrance reveals, scroll-spy, the mobile menu, two micro-interactions,
- * and deep-linking into a closed index row.
+ * deep-linking into a closed index row, and the form enhancement in
+ * `./forms`.
  *
- * Nothing here is required for the page to be readable or navigable — the
- * document works with this file absent.
+ * None of it is required. With this file absent the document is still
+ * readable and navigable, and both forms still submit — as ordinary posts
+ * the endpoints answer with a redirect.
  */
+
+import { initForms } from './forms';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -70,7 +74,10 @@ function initScrollSpy(): void {
       // between two sections that share the viewport.
       const active = sections.find((section) => visible.has(section.id));
       for (const link of links) {
-        if (active && link.dataset.spy === active.id) link.setAttribute('aria-current', 'true');
+        // "location", not "page": these point at a section of the current
+        // document, and the Contact item is marked aria-current="page"
+        // server-side when that page is the one being viewed.
+        if (active && link.dataset.spy === active.id) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
       }
     },
@@ -245,6 +252,7 @@ function boot(): void {
   initCounters();
   initMagnetic();
   initDeepLinks();
+  initForms();
 }
 
 if (document.readyState === 'loading') {

@@ -43,6 +43,14 @@
   --gold-wash: rgba(201, 162, 39, 0.09);
   --gold-edge: rgba(201, 162, 39, 0.34);
 
+  /* --- Signal -------------------------------------------------------------
+     Two states the gold cannot carry: something is wrong, something worked.
+     Used only in form feedback, never as decoration.                        */
+  --signal-error: #e5837a; /*  7.6:1 on --ink-900 */
+  --signal-error-edge: rgba(229, 131, 122, 0.4);
+  --signal-error-wash: rgba(229, 131, 122, 0.08);
+  --signal-ok: var(--gold-200);
+
   /* --- Lines --------------------------------------------------------------
      The grid is drawn, not implied. Hairlines carry the whole layout.       */
   --line-faint: rgba(255, 255, 255, 0.055);

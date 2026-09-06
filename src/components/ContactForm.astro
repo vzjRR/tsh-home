@@ -1,0 +1,107 @@
+---
+/**
+ * The contact form.
+ *
+ * Posts to /api/contact. With JavaScript it submits in place and reports back
+ * through the live region; without it, it is an ordinary form post that the
+ * endpoint answers with a redirect to /contact/sent. Both paths are real.
+ */
+
+const topics = [
+  { value: 'project', label: 'A new project' },
+  { value: 'work', label: 'Something in the work index' },
+  { value: 'collaboration', label: 'Collaboration' },
+  { value: 'other', label: 'Something else' },
+];
+---
+
+<form class="form" method="post" action="/api/contact" data-contact-form novalidate>
+  <p class="form__status mono" role="status" aria-live="polite" data-form-status></p>
+
+  <div class="form__row">
+    <div class="field">
+      <label class="mono field__label" for="contact-name">Name</label>
+      <input
+        class="field__control"
+        id="contact-name"
+        name="name"
+        type="text"
+        autocomplete="name"
+        required
+        minlength="2"
+        maxlength="120"
+        aria-describedby="contact-name-error"
+      />
+      <p class="mono field__error" id="contact-name-error" data-error-for="name">
+        Tell me what to call you.
+      </p>
+    </div>
+
+    <div class="field">
+      <label class="mono field__label" for="contact-email">Email</label>
+      <input
+        class="field__control"
+        id="contact-email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+        maxlength="254"
+        aria-describedby="contact-email-error"
+      />
+      <p class="mono field__error" id="contact-email-error" data-error-for="email">
+        That address will not reach you.
+      </p>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="mono field__label" for="contact-topic">
+      Subject
+      <span class="mono field__optional">Optional</span>
+    </label>
+    <select class="field__control" id="contact-topic" name="topic" data-topic>
+      {topics.map((t) => <option value={t.value}>{t.label}</option>)}
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="mono field__label" for="contact-message">Message</label>
+    <textarea
+      class="field__control"
+      id="contact-message"
+      name="message"
+      required
+      minlength="10"
+      maxlength="4000"
+      rows="7"
+      aria-describedby="contact-message-error contact-message-hint"
+      placeholder="What are you building, what has to be true for it to work, and when do you need it?"></textarea>
+    <p class="mono field__error" id="contact-message-error" data-error-for="message">
+      A sentence or two, at least.
+    </p>
+    <p class="field__hint" id="contact-message-hint">
+      The more specific the problem, the more useful the first reply.
+    </p>
+  </div>
+
+  <!-- Traps. Never filled by a person, always filled by a script. -->
+  <div class="trap" aria-hidden="true">
+    <label for="contact-company">Company</label>
+    <input id="contact-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+  <input type="hidden" name="ts" value="0" data-ts />
+  <input type="hidden" name="ref" value="" data-ref />
+
+  <div class="form__actions">
+    <button class="button button--primary form__submit" type="submit" data-submit>
+      <span data-submit-label>Send message</span>
+      <svg width="11" height="11" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+        <path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1"></path>
+      </svg>
+    </button>
+    <p class="form__note">
+      Your message and address are stored so I can reply, and for nothing else.
+    </p>
+  </div>
+</form>

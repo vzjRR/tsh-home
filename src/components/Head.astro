@@ -4,15 +4,23 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import '../styles/components.css';
+import '../styles/forms.css';
 
 interface Props {
   title?: string;
   description?: string;
   /** Path only; resolved against `site.url`. */
   path?: string;
+  /** Confirmation pages are destinations, not content — keep them out. */
+  noindex?: boolean;
 }
 
-const { title = site.title, description = site.description, path = '/' } = Astro.props;
+const {
+  title = site.title,
+  description = site.description,
+  path = '/',
+  noindex = false,
+} = Astro.props;
 
 const canonical = new URL(path, site.url).href;
 const ogImage = new URL('/og.png', site.url).href;
@@ -88,6 +96,7 @@ const website = {
 <meta name="twitter:image" content={ogImage} />
 
 <meta name="author" content={site.name} />
+{noindex && <meta name="robots" content="noindex, follow" />}
 <link rel="sitemap" href="/sitemap-index.xml" />
 
 <script type="application/ld+json" set:html={JSON.stringify(person)} />

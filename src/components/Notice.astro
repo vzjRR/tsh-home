@@ -1,0 +1,98 @@
+---
+/** A confirmation page: one statement, one next step. Used for the endpoints'
+ *  no-JavaScript landing pages. */
+interface Props {
+  index: string;
+  label: string;
+  title: string;
+  body: string;
+  actionHref: string;
+  actionLabel: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}
+
+const { index, label, title, body, actionHref, actionLabel, secondaryHref, secondaryLabel } =
+  Astro.props;
+---
+
+<section class="notice">
+  <div class="shell notice__inner">
+    <p class="notice__meta">
+      <span class="mono notice__index">{index}</span>
+      <span class="mono notice__label">{label}</span>
+      <span class="notice__rule" aria-hidden="true"></span>
+    </p>
+
+    <h1 class="notice__title">{title}</h1>
+    <p class="lede notice__body">{body}</p>
+
+    <p class="notice__actions">
+      <a class="button button--primary" href={actionHref}>
+        <span>{actionLabel}</span>
+        <svg width="11" height="11" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+          <path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1"></path>
+        </svg>
+      </a>
+      {
+        secondaryHref && secondaryLabel && (
+          <a class="button button--ghost" href={secondaryHref}>
+            <span>{secondaryLabel}</span>
+          </a>
+        )
+      }
+    </p>
+  </div>
+</section>
+
+<style>
+  .notice {
+    display: flex;
+    align-items: center;
+    min-block-size: min(78svh, 44rem);
+    padding-block: calc(var(--header-h, 68px) + var(--space-8)) var(--space-9);
+  }
+
+  .notice__inner {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .notice__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .notice__index {
+    color: var(--gold-300);
+  }
+
+  .notice__label {
+    color: var(--text-tertiary);
+  }
+
+  .notice__rule {
+    flex: 1;
+    block-size: var(--hairline);
+    background: linear-gradient(90deg, var(--line-strong), transparent 88%);
+  }
+
+  .notice__title {
+    font-size: var(--step-4);
+    font-weight: 300;
+    letter-spacing: var(--tracking-display);
+    max-inline-size: 20ch;
+  }
+
+  .notice__body {
+    max-inline-size: 52ch;
+  }
+
+  .notice__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-block-start: var(--space-5);
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import Notice from '../../components/Notice.astro';
+import { site } from '../../data/site';
+---
+
+<Base
+  noindex
+  path="/newsletter/subscribed"
+  title={`Subscribed — ${site.name}`}
+  description="You are on the list for updates on new work."
+>
+  <Notice
+    index="✓"
+    label="Subscribed"
+    title="You are on the list."
+    body="Occasional notes on the systems going out — what shipped, what broke, and what it took to fix. No schedule, no filler, and every message carries an unsubscribe link."
+    actionHref="/#work"
+    actionLabel="Back to the work"
+    secondaryHref="/contact"
+    secondaryLabel="Send a message"
+  />
+</Base>

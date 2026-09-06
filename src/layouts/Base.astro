@@ -8,15 +8,16 @@ interface Props {
   title?: string;
   description?: string;
   path?: string;
+  noindex?: boolean;
 }
 
-const { title, description, path } = Astro.props;
+const { title, description, path, noindex } = Astro.props;
 ---
 
 <!doctype html>
 <html lang={site.lang} dir={site.dir}>
   <head>
-    <Head title={title} description={description} path={path} />
+    <Head title={title} description={description} path={path} noindex={noindex} />
     <script is:inline>
       // Marks the document as scripted before first paint, so entrance
       // animations only hide content that will actually be revealed.

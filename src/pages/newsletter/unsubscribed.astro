@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import Notice from '../../components/Notice.astro';
+import { site } from '../../data/site';
+---
+
+<Base
+  noindex
+  path="/newsletter/unsubscribed"
+  title={`Unsubscribed — ${site.name}`}
+  description="You have been removed from the mailing list."
+>
+  <Notice
+    index="—"
+    label="Unsubscribed"
+    title="You are off the list."
+    body="No more updates will be sent to that address. Nothing else changes, and you can subscribe again whenever you want to."
+    actionHref="/"
+    actionLabel="Back to the site"
+    secondaryHref="/contact"
+    secondaryLabel="Send a message"
+  />
+</Base>

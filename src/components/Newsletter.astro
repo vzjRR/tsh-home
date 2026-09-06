@@ -1,0 +1,154 @@
+---
+import SectionHead from './SectionHead.astro';
+
+interface Props {
+  /** Recorded with the row, so it is clear where a sign-up came from. */
+  source?: string;
+  /** Section index on the home page; omitted when used as a plain band. */
+  index?: string;
+}
+
+const { source = 'site', index } = Astro.props;
+---
+
+<section class="section newsletter" id="newsletter" aria-labelledby="newsletter-title">
+  <div class="shell">
+    {
+      index && (
+        <SectionHead
+          index={index}
+          label="Newsletter"
+          title="What I ship, when I ship it."
+          lede="Occasional notes on the systems going out — new work, what broke, and what it took to fix. No schedule, no filler, one click to leave."
+        />
+      )
+    }
+
+    <div class="newsletter__body">
+      <div class="newsletter__lead" data-reveal>
+        {!index && <h2 class="newsletter__heading">Subscribe for the latest.</h2>}
+        {/* The paragraph follows the page direction so it aligns with the
+            column; the span carries the Arabic and its own bidi context. */}
+        <p class="newsletter__arabic">
+          <span lang="ar" dir="rtl">اشترك لآخر الأخبار</span>
+        </p>
+        {
+          !index && (
+            <p class="newsletter__standalone">
+              Occasional notes on the systems going out — what shipped, what broke, and what it took
+              to fix. No schedule, no filler, one click to leave.
+            </p>
+          )
+        }
+      </div>
+
+      <form
+        class="form newsletter__form"
+        method="post"
+        action="/api/subscribe"
+        data-subscribe-form
+        novalidate
+        data-reveal
+        style="--i:1"
+      >
+        <p class="form__status mono" role="status" aria-live="polite" data-form-status></p>
+
+        <div class="field">
+          <label class="mono field__label" for="newsletter-email">Email address</label>
+          <div class="newsletter__control">
+            <input
+              class="field__control"
+              id="newsletter-email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
+              maxlength="254"
+              placeholder="you@example.com"
+              aria-describedby="newsletter-email-error"
+            />
+            <button class="button button--primary newsletter__submit" type="submit" data-submit>
+              <span data-submit-label>Subscribe</span>
+              <svg width="11" height="11" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+                <path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-width="1.1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="mono field__error" id="newsletter-email-error" data-error-for="email">
+            That address will not reach you.
+          </p>
+        </div>
+
+        <div class="trap" aria-hidden="true">
+          <label for="newsletter-company">Company</label>
+          <input id="newsletter-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <input type="hidden" name="ts" value="0" data-ts />
+        <input type="hidden" name="source" value={source} />
+
+        <p class="form__note">
+          Your address is stored to send the updates and for nothing else. Every message carries an
+          unsubscribe link.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .newsletter__body {
+    display: grid;
+    gap: clamp(var(--space-6), 4vw, var(--space-8));
+    align-items: start;
+  }
+
+  .newsletter__heading {
+    font-size: var(--step-3);
+    font-weight: 400;
+    letter-spacing: var(--tracking-display);
+    max-inline-size: 16ch;
+  }
+
+  .newsletter__arabic {
+    margin-block-start: var(--space-4);
+    font-size: var(--step-2);
+    line-height: 1.6;
+    letter-spacing: 0;
+    color: var(--gold-200);
+  }
+
+  .newsletter__standalone {
+    margin-block-start: var(--space-5);
+    color: var(--text-secondary);
+    max-inline-size: 40ch;
+  }
+
+  .newsletter__control {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .newsletter__submit {
+    justify-content: space-between;
+    padding-block: 0.95rem;
+  }
+
+  @media (min-width: 34rem) {
+    .newsletter__control {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-3);
+      align-items: stretch;
+    }
+
+    .newsletter__submit {
+      justify-content: center;
+    }
+  }
+
+  @media (min-width: 62rem) {
+    .newsletter__body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: var(--space-9);
+    }
+  }
+</style>
