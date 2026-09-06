@@ -17,12 +17,12 @@
     "qa:shots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.10",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.3.1",
-    "typescript": "^6.0.3"
+    "astro": "^7.3.1"
   },
   "devDependencies": {
-    "playwright": "^1.63.0"
+    "@astrojs/check": "^0.9.10",
+    "playwright": "^1.63.0",
+    "typescript": "^6.0.3"
   }
 }
