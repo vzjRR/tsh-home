@@ -21,7 +21,7 @@ behind it, a contact form and a newsletter.
 | **Astro** (static output) | The pages are content. Astro ships them as HTML with no framework runtime, and its content model means new work — and later articles or case studies — is data rather than components. |
 | **TypeScript** | The content model and the endpoints are typed, so a malformed entry fails the build instead of the page. |
 | **Hand-authored CSS** with a token layer | A utility framework would have produced a generic result. The design system is six files, scoped per component by Astro. |
-| **Cloudflare Pages Functions + D1** | The forms had to be real. Two endpoints and one small database — no third-party form service, no data leaving the account. |
+| **Cloudflare Worker (static assets) + D1** | The forms had to be real, and `/medical` on the same domain has to keep running on its own Worker untouched — see Deployment below. Two form routes and one small database, no third-party form service, no data leaving the account. |
 | **No UI framework, no animation library, no icon package** | Behaviour is ~7 KB of TypeScript; icons are inline SVG. |
 | **Self-hosted Geist / Geist Mono** | Latin subset, variable, 52 KB for both — no third-party font request on the critical path. |
 
@@ -42,7 +42,8 @@ npm run dev        # Astro dev server — pages only, no endpoints
 npm run build      # static build to dist/
 npm run preview    # serve the build
 
-npx wrangler pages dev   # dist/ + functions/ + a local D1: the whole site
+npx wrangler dev         # dist/ + worker/ + a local D1: the whole site
+npm run deploy           # the real thing — see Deployment below first
 
 npm run check      # astro check — types and template diagnostics
 npm run qa         # 36 behaviour, accessibility and form checks (needs the above)
@@ -83,25 +84,68 @@ success, so a bot learns nothing), field validation, then a per-sender rate
 limit — 3 messages and 5 sign-ups per hour. The sender's IP is never stored;
 only a salted hash of it, and only to make that limit possible.
 
-### Deployment (Cloudflare Pages)
+### Deployment — a Cloudflare Worker, not Pages
 
-- **Build command** `npm run build`
-- **Output directory** `dist`
-- **Node version** 20 or newer
+This ships as a **Worker with static assets** (`wrangler deploy`), not Cloudflare
+Pages, for one reason: `tsh87.com/medical*` runs on an existing production
+Worker that must keep running exactly as it is, and splitting one zone by path
+between two Workers needs Cloudflare **Routes** — a Pages custom domain claims
+the whole hostname and cannot be scoped to a path.
 
-Then, once:
+`worker/index.ts` is the entry point. It handles `/api/contact` and
+`/api/subscribe` itself (the same logic that used to run as Pages Functions)
+and serves everything else from the `ASSETS` binding — the built `dist/`.
+`wrangler.toml` declares the D1 binding and, commented out, the Route that
+actually puts the site on the domain.
 
-1. **Bind the database.** Settings → Functions → D1 bindings: variable name
-   `DB`, database `tsh87-site`. (`wrangler.toml` already declares it for local
-   development. A database id is not a credential — it names the database, it
-   does not grant access to it.)
-2. **Apply the schema** — `npx wrangler d1 execute tsh87-site --remote --file db/schema.sql`.
-   It is idempotent and safe to re-run.
-3. **Set the secrets.** `IP_SALT` is the one that matters; set it to any long
-   random string. `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are optional —
-   set both and every submission also arrives on Telegram.
+**Before the first deploy**, check `wrangler.toml`: `name = "tsh-home"`. Do not
+rename it to `tsh87` — that is the existing production Worker's name, and
+deploying under the same name overwrites it.
 
-Nothing is committed but the schema. No key, token or salt is in this repo.
+#### Going live, in order
+
+The cutover moves `tsh87.com`'s catch-all route from the existing Worker to
+this one, while giving the existing Worker a narrower route so `/medical`
+keeps working. Cloudflare resolves a request to whichever matching route is
+more specific, so `/medical*` always wins over `/*` regardless of which
+Worker holds which — but the two edits still have to happen in this order, or
+`/medical` briefly has no route at all:
+
+1. **Authenticate wrangler** from a machine or session that has it —
+   `npx wrangler login`, or set `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit,
+   Workers Routes: Edit for the `tsh87.com` zone).
+2. **Deploy this Worker first, without its route** — `npm run deploy` with the
+   `routes` line in `wrangler.toml` still commented out. This puts `tsh-home`
+   live on its own `*.workers.dev` URL with nothing pointed at it yet, so it
+   can be checked before it touches the domain.
+3. **Bind the database and secrets**, via the dashboard (Workers & Pages →
+   tsh-home → Settings) or the CLI:
+   - **D1**: bind `DB` → `tsh87-site` (`wrangler.toml` already declares this,
+     so a dashboard-created Worker only needs it if the binding didn't carry
+     over — check Settings → Bindings first).
+   - **Apply the schema** — `npx wrangler d1 execute tsh87-site --remote --file db/schema.sql`.
+     Idempotent, safe to re-run.
+   - **Secrets** — `npx wrangler secret put IP_SALT` (any long random string;
+     this is the one that matters). `TELEGRAM_BOT_TOKEN` and
+     `TELEGRAM_CHAT_ID` are optional — set both and every submission also
+     arrives on Telegram.
+4. **Check the `*.workers.dev` URL.** Confirm the home page, `/contact`, and
+   both forms work before touching the domain.
+5. **On the existing "tsh87" Worker**, in the dashboard, narrow its route from
+   `tsh87.com/*` to `tsh87.com/medical*`. Nothing changes for visitors yet —
+   `/medical` still resolves to it, and everything else briefly has no route.
+6. **Uncomment the `routes` block in `wrangler.toml`** and redeploy
+   (`npm run deploy`). This Worker now claims `tsh87.com/*`; combined with
+   step 5, `/medical*` still resolves to the existing Worker (more specific
+   pattern wins) and every other path lands here.
+7. **Verify on the real domain**: the home page, `/contact`, both forms, and
+   — the one that actually matters — `tsh87.com/medical` still serving the
+   clinical platform unchanged.
+
+Nothing is committed but the schema. No key, token or salt is in this repo,
+and this repository's own tooling (the Cloudflare MCP connector used to build
+it, and the `wrangler` CLI in this environment) has no deploy or Route/DNS
+access — steps 1, 5 and 6 need to be run from somewhere that does.
 
 ### Reading what comes in
 
@@ -112,11 +156,6 @@ npx wrangler d1 execute tsh87-site --remote \
 npx wrangler d1 execute tsh87-site --remote \
   --command "SELECT email, created_at FROM subscribers WHERE status='active' ORDER BY created_at DESC"
 ```
-
-> **Note on the apex domain.** `tsh87.com` currently serves *Al Ghafri Medical
-> Solutions* (a separate Next.js Worker with its own database). Pointing this
-> site at the apex would replace it. Decide the cutover deliberately — a
-> subdomain for one of the two, or a path split — before changing DNS.
 
 `src/data/site.ts` holds the canonical `url`; update it if the site lands
 anywhere other than `https://tsh87.com` and the canonical link, Open Graph
@@ -132,10 +171,12 @@ public/                 served as-is
   og.png                share card, generated by npm run og
   favicon-mark.png, apple-touch-icon.png, robots.txt, llms.txt
 db/schema.sql           the D1 tables
+worker/index.ts         the Worker entry point — routes /api/*, else serves ASSETS
 functions/
   _lib.ts               validation, hashing, rate limits, responses
-  api/contact.ts        POST /api/contact
-  api/subscribe.ts      POST /api/subscribe · GET unsubscribe
+  api/contact.ts        the /api/contact logic, called from worker/index.ts
+  api/subscribe.ts      the /api/subscribe logic, called from worker/index.ts
+wrangler.toml           Worker config — name, D1 binding, the commented Route
 src/
   assets/brand/         logo.webp (in use), logo-source.jpg (the original)
   components/           one file per section, plus Logo, Nav, Footer, Plate, forms

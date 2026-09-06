@@ -16,7 +16,9 @@
     "og": "node scripts/build-og.mjs",
     "qa:shots": "node scripts/screenshots.mjs",
     "qa": "node scripts/qa.mjs",
-    "logo": "node scripts/build-logo.mjs"
+    "logo": "node scripts/build-logo.mjs",
+    "worker:dev": "wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

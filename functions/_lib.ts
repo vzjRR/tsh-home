@@ -1,8 +1,10 @@
 /**
- * Shared helpers for the form endpoints.
+ * Shared helpers for the form endpoints in `api/`.
  *
- * These run as Cloudflare Pages Functions. Files prefixed with `_` are not
- * routed, so this module is importable but never reachable over HTTP.
+ * The `PagesFunction`/`PagesContext` names are a holdover from when these ran
+ * as Cloudflare Pages Functions; the shape is unchanged and `worker/index.ts`
+ * now calls them directly, so the types stayed rather than forcing a rename
+ * through every file for no behavioural reason.
  */
 
 export interface D1Result<T = unknown> {

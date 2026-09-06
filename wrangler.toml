@@ -1,14 +1,33 @@
-# Cloudflare Pages configuration.
+# Cloudflare Worker configuration.
 #
-# The site itself is static; `functions/` adds the two form endpoints. The D1
-# binding below is what they write to. A database id is not a credential — it
-# identifies the database, it does not grant access to it. Secrets (IP_SALT,
-# TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) are set in the dashboard or with
-# `wrangler pages secret put`, never here.
+# Deployed as a Worker (not Pages) deliberately: `tsh87.com/medical*` must keep
+# running on the existing production Worker unchanged, and splitting one zone
+# by path between two Workers needs Cloudflare Routes — Pages custom domains
+# cannot be scoped to a path. See README.md § Deployment for the exact,
+# ordered steps; the short version is:
+#
+#   1. On the EXISTING "tsh87" Worker, narrow its route from `tsh87.com/*`
+#      to `tsh87.com/medical*`.
+#   2. Deploy this Worker (`wrangler deploy`) — it claims `tsh87.com/*` below.
+#      Cloudflare resolves `/medical*` to the existing Worker because it is
+#      the more specific pattern; every other path falls through to this one.
+#
+# IMPORTANT: `name` below must stay different from the existing production
+# Worker's name ("tsh87") — deploying under the same name overwrites it.
 
-name = "tsh87"
+name = "tsh-home"
 compatibility_date = "2026-09-01"
-pages_build_output_dir = "dist"
+main = "worker/index.ts"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+# Uncomment once step 1 above is done on the existing Worker — this is what
+# actually puts the site on the domain.
+# routes = [
+#   { pattern = "tsh87.com/*", zone_name = "tsh87.com" }
+# ]
 
 [[d1_databases]]
 binding = "DB"
