@@ -17,6 +17,23 @@ export interface Capability {
 export const capabilities: Capability[] = [
   {
     index: '01',
+    title: 'Software Development',
+    summary:
+      'The core of the work: designing, building, shipping and maintaining software that other people depend on — and that keeps running once I have moved on to the next thing.',
+    items: [
+      'Application and product engineering',
+      'System architecture and data modelling',
+      'API design and integration',
+      'TypeScript, JavaScript, Python and Lua',
+      'Relational databases and migrations',
+      'Testing, review and release engineering',
+      'Deployment, monitoring and operations',
+      'Refactoring and long-term maintenance',
+    ],
+    evidence: ['ag-medical', 'censorship-platform', 'points-system', 'enclave-home'],
+  },
+  {
+    index: '02',
     title: 'Discord Systems',
     summary:
       'Community infrastructure: bots that provision their own structure, moderation with an audit trail, and staff tooling that lives outside Discord where it belongs.',
@@ -33,7 +50,7 @@ export const capabilities: Capability[] = [
     evidence: ['enclave-tickets', 'censorship-platform', 'points-system', 'lspd-suite', 'rp-builder'],
   },
   {
-    index: '02',
+    index: '03',
     title: 'FiveM & GTA V',
     summary:
       'Server-side platforms for roleplay communities — the parts that keep a server accountable, observable and recoverable.',
@@ -50,7 +67,7 @@ export const capabilities: Capability[] = [
     evidence: ['serverstats', 'server-status', 'car-copyright-clean', 'fivem-security-agents'],
   },
   {
-    index: '03',
+    index: '04',
     title: 'Web & API',
     summary:
       'Applications that degrade honestly: a document that works before the JavaScript arrives, and an API that is the only thing trusted with the truth.',
@@ -67,7 +84,7 @@ export const capabilities: Capability[] = [
     evidence: ['enclave-home', 'ag-medical', 'censorship-platform'],
   },
   {
-    index: '04',
+    index: '05',
     title: 'Telegram Automation',
     summary:
       'Bots and workflows on the messaging layer: notifications that reach the right person, and operations that run without one.',
@@ -81,7 +98,7 @@ export const capabilities: Capability[] = [
     evidence: [],
   },
   {
-    index: '05',
+    index: '06',
     title: 'Applications & Media',
     summary:
       'Software people install and open: media playback, streaming, and interfaces built for a device rather than a browser tab.',
@@ -95,7 +112,7 @@ export const capabilities: Capability[] = [
     evidence: ['bariq4k', 'beyond-the-shift'],
   },
   {
-    index: '06',
+    index: '07',
     title: 'Automation & AI',
     summary:
       'AI as an instrument in the workshop. Agents with a defined scope, a review gate before anything destructive, and an honest account of what they actually did.',

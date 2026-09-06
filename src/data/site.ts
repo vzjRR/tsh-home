@@ -7,7 +7,6 @@
  */
 
 export type SocialId =
-  | 'github'
   | 'telegram'
   | 'instagram'
   | 'snapchat'
@@ -39,8 +38,15 @@ export const site = {
   /** Two lines, set as one block in the hero. */
   nameLines: ['Talal', 'Al Ghafri'] as const,
 
-  role: 'Software Developer · Systems Builder',
-  disciplines: ['Discord Systems', 'FiveM Platforms', 'Web & API', 'Mobile', 'Automation'],
+  role: 'Software Development · Systems Engineering',
+  disciplines: [
+    'Software Development',
+    'Discord Systems',
+    'FiveM Platforms',
+    'Web & API',
+    'Applications',
+    'Automation',
+  ],
   location: 'Muscat, Oman',
   timezone: 'GMT+4',
 
@@ -54,19 +60,11 @@ export const site = {
 } as const;
 
 /**
- * Verified channels only. `email` is intentionally absent until a public
- * address is confirmed — add it here and it appears in the contact section
- * and the footer automatically.
+ * Public channels only. No repository or source links appear anywhere on this
+ * site. `email` is intentionally absent until a public address is confirmed —
+ * add it here and it appears in the contact page and the footer automatically.
  */
 export const channels: Channel[] = [
-  {
-    id: 'github',
-    label: 'GitHub',
-    handle: 'vzjRR',
-    href: 'https://github.com/vzjRR',
-    note: 'Source for most of the work below.',
-    compact: true,
-  },
   {
     id: 'telegram',
     label: 'Telegram',
@@ -98,17 +96,18 @@ export const channels: Channel[] = [
 
 export interface NavItem {
   label: string;
+  /** Rooted, so the same nav works from every page. */
   href: string;
-  /** The section id this item tracks for scroll-spy. */
-  watches: string;
+  /** The home-page section this item tracks for scroll-spy, where it has one. */
+  watches?: string;
 }
 
 export const nav: NavItem[] = [
-  { label: 'Profile', href: '#profile', watches: 'profile' },
-  { label: 'Capabilities', href: '#capabilities', watches: 'capabilities' },
-  { label: 'Work', href: '#work', watches: 'work' },
-  { label: 'Stack', href: '#stack', watches: 'stack' },
-  { label: 'Contact', href: '#contact', watches: 'contact' },
+  { label: 'Profile', href: '/#profile', watches: 'profile' },
+  { label: 'Capabilities', href: '/#capabilities', watches: 'capabilities' },
+  { label: 'Work', href: '/#work', watches: 'work' },
+  { label: 'Stack', href: '/#stack', watches: 'stack' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 export const profile = {

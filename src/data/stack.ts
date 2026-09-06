@@ -37,7 +37,6 @@ export const stack: StackGroup[] = [
       'FiveM / txAdmin',
       'Discord',
       'Telegram',
-      'GitHub',
     ],
   },
   {

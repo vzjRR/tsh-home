@@ -59,13 +59,11 @@ const arrow = `<path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-w
                     <span class="visually-hidden">{p.title}</span>
                   </a>
                 )}
-                {p.github && (
-                  <a class="link" href={p.github} rel="noopener">
-                    Source
-                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
-                    <span class="visually-hidden">for {p.title}</span>
-                  </a>
-                )}
+                <a class="link" href={`/contact?ref=${p.slug}`}>
+                  Ask about this
+                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
+                  <span class="visually-hidden">work — {p.title}</span>
+                </a>
               </p>
             </div>
           </article>
@@ -121,13 +119,11 @@ const arrow = `<path d="M1 8 8 1M8 1H2.4M8 1v5.6" stroke="currentColor" stroke-w
                         <span class="visually-hidden">{p.title}</span>
                       </a>
                     )}
-                    {p.github && (
-                      <a class="link" href={p.github} rel="noopener">
-                        Source
-                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
-                        <span class="visually-hidden">for {p.title}</span>
-                      </a>
-                    )}
+                    <a class="link" href={`/contact?ref=${p.slug}`}>
+                      Ask about this
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true" set:html={arrow} />
+                      <span class="visually-hidden">work — {p.title}</span>
+                    </a>
                   </p>
                 </div>
               </div>

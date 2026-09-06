@@ -3,7 +3,7 @@
  *
  * A technical trajectory, not an employment history: what the work was, what
  * it became, and what it turned into. No dates are asserted that cannot be
- * checked from the repositories themselves.
+ * substantiated.
  */
 
 export interface Phase {
