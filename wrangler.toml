@@ -1,0 +1,16 @@
+# Cloudflare Pages configuration.
+#
+# The site itself is static; `functions/` adds the two form endpoints. The D1
+# binding below is what they write to. A database id is not a credential — it
+# identifies the database, it does not grant access to it. Secrets (IP_SALT,
+# TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) are set in the dashboard or with
+# `wrangler pages secret put`, never here.
+
+name = "tsh87"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tsh87-site"
+database_id = "5251f4ab-d9ef-4212-b9df-53d0791badba"
