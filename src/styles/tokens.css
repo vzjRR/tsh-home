@@ -19,10 +19,10 @@
 
   /* --- Type ---------------------------------------------------------------
      Four voices only. More than four is noise.                              */
-  --text-primary: #ededed;
-  --text-secondary: #9b9b9b;
-  --text-tertiary: #6b6b6b;
-  --text-quiet: #4a4a4a;
+  --text-primary: #ededed; /* 16.4:1 on --ink-900 */
+  --text-secondary: #9b9b9b; /*  7.3:1 */
+  --text-tertiary: #8f8f8f; /*  6.3:1 */
+  --text-quiet: #7a7a7a; /*  4.7:1 — the floor, still AA at 11px */
 
   /* --- Gold ---------------------------------------------------------------
      Metallic by gradient, never by glow. Used for index, emphasis, state.   */

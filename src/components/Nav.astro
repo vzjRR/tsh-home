@@ -5,7 +5,7 @@ import { nav, site } from '../data/site';
 
 <header class="masthead" data-masthead>
   <div class="masthead__inner shell">
-    <a class="masthead__brand" href="#top" aria-label={`${site.name} — top of page`}>
+    <a class="masthead__brand" href="#top">
       <Logo />
     </a>
 
@@ -238,15 +238,20 @@ import { nav, site } from '../data/site';
     display: grid;
     align-items: center;
     opacity: 0;
+    visibility: hidden;
+    /* Visibility flips instantly on open — focus moves into the panel in the
+       same tick — and waits out the fade on close. */
     transition:
       opacity var(--dur-3) var(--ease-out),
-      visibility var(--dur-3);
-    visibility: hidden;
+      visibility 0s linear var(--dur-3);
   }
 
   .menu[data-open] {
     opacity: 1;
     visibility: visible;
+    transition:
+      opacity var(--dur-3) var(--ease-out),
+      visibility 0s;
   }
 
   .menu__inner {

@@ -90,15 +90,25 @@ function initMenu(): void {
   let open = false;
   let lastFocus: HTMLElement | null = null;
 
+  // While the panel is up, everything behind it is inert — the menu covers the
+  // page, so tabbing into what it hides would be tabbing into nothing.
+  const behind = ['main', 'footer'].flatMap((sel) =>
+    Array.from(document.querySelectorAll<HTMLElement>(sel)),
+  );
+
   const setOpen = (next: boolean) => {
     if (next === open) return;
     open = next;
     menu.toggleAttribute('data-open', open);
     toggle.setAttribute('aria-expanded', String(open));
     document.documentElement.style.overflow = open ? 'hidden' : '';
+    behind.forEach((el) => el.toggleAttribute('inert', open));
 
     if (open) {
       lastFocus = document.activeElement as HTMLElement | null;
+      // Flush the style change before focusing: a still-hidden element cannot
+      // take focus, and the panel only becomes visible on recalculation.
+      void menu.offsetHeight;
       menu.querySelector<HTMLAnchorElement>('[data-menu-link]')?.focus({ preventScroll: true });
     } else {
       (lastFocus ?? toggle).focus({ preventScroll: true });
