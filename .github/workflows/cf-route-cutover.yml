@@ -45,19 +45,27 @@ jobs:
         if: ${{ inputs.action == 'inspect' }}
         run: |
           set -euo pipefail
+
           echo "== Classic Workers Routes on the zone =="
           curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" | jq '.result'
           echo
+
           echo "== Workers Custom Domains on the account, filtered to this zone =="
           curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/domains?zone_id=$ZONE_ID" \
             | jq '.result'
           echo
-          echo "== Pages projects on the account, name + domains only =="
-          curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
-            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects?per_page=50" \
-            | jq '[.result[] | {name, domains, production_branch, source_type: .source.type, deployment_configs_production_compatibility_date: .deployment_configs.production.compatibility_date}]'
+
+          echo "== Pages projects on the account =="
+          PAGES_JSON=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects?per_page=50")
+          if echo "$PAGES_JSON" | jq -e '.success == true' > /dev/null 2>&1; then
+            echo "$PAGES_JSON" | jq '[.result[] | {name, domains}]'
+          else
+            echo "Pages API call did not succeed — likely the token has no Pages permission. Raw response:"
+            echo "$PAGES_JSON" | jq '.' 2>/dev/null || echo "$PAGES_JSON"
+          fi
 
       - name: Narrow the existing tsh87 worker's route to /medical*
         if: ${{ inputs.action == 'narrow-existing-to-medical' }}
