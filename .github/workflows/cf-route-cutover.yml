@@ -99,12 +99,23 @@ jobs:
         if: ${{ inputs.action == 'verify' }}
         run: |
           set -euo pipefail
-          echo "GET https://tsh87.com/"
-          curl -sS -o /tmp/root.html -w "  http_code=%{http_code}\n" https://tsh87.com/
-          echo "  first 300 chars:"
+
+          echo "== DNS resolution =="
+          echo "tsh87.com:"
+          dig +short tsh87.com A
+          dig +short tsh87.com CNAME
+          echo "www.tsh87.com:"
+          dig +short www.tsh87.com CNAME
+          dig +short www.tsh87.com A
+          echo
+
+          echo "== Response headers: https://tsh87.com/ =="
+          curl -sS -D - -o /tmp/root.html https://tsh87.com/ | grep -iE '^(HTTP|server|cf-ray|cf-cache-status|x-powered-by|via|location):' || true
+          echo "  first 300 chars of body:"
           head -c 300 /tmp/root.html; echo
           echo
-          echo "GET https://tsh87.com/medical"
-          curl -sS -o /tmp/medical.html -w "  http_code=%{http_code}\n" https://tsh87.com/medical
-          echo "  first 300 chars:"
+
+          echo "== Response headers: https://tsh87.com/medical =="
+          curl -sS -D - -o /tmp/medical.html https://tsh87.com/medical | grep -iE '^(HTTP|server|cf-ray|cf-cache-status|x-powered-by|via|location):' || true
+          echo "  first 300 chars of body:"
           head -c 300 /tmp/medical.html; echo
