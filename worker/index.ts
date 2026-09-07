@@ -1,10 +1,11 @@
 /**
  * The Worker entry point.
  *
- * Al Ghafri Medical Solutions used to live at `tsh87.com/medical` and
- * now has its own subdomain, `med.tsh87.com`. Any request under `/medical`
- * here is an old link - redirect it to the same path on the new domain rather
- * than letting it 404.
+ * Al Ghafri Medical Solutions used to live at `tsh87.com/medical` and now has
+ * its own subdomain, `med.tsh87.com`, with the platform itself at that
+ * subdomain's root rather than nested under /medical. Any request under
+ * `/medical` here is an old link - redirect it to the same path with the
+ * `/medical` prefix stripped, on the new domain, rather than letting it 404.
  *
  * Everything else that isn't that redirect or `/api/contact`/`/api/subscribe`
  * is a static asset, served straight from the `ASSETS` binding (the built
@@ -42,7 +43,8 @@ export default {
     const context: PagesContext<Env> = { request, env, waitUntil: ctx.waitUntil.bind(ctx) };
 
     if (pathname === '/medical' || pathname.startsWith('/medical/')) {
-      const target = new URL(`${pathname}${url.search}`, `https://${MEDICAL_HOST}`);
+      const remainder = pathname.slice('/medical'.length) || '/';
+      const target = new URL(`${remainder}${url.search}`, `https://${MEDICAL_HOST}`);
       return Response.redirect(target.href, 301);
     }
 
