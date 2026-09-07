@@ -3,10 +3,6 @@ name: Cloudflare route cutover (manual, one-off)
 on:
   workflow_dispatch:
     inputs:
-      cf_token:
-        description: "Cloudflare API token (Workers Scripts:Edit + Workers Routes:Edit on tsh87.com). Not needed for 'verify'."
-        required: false
-        type: string
       action:
         description: What to do
         required: true
@@ -21,12 +17,15 @@ jobs:
   cutover:
     runs-on: ubuntu-latest
     env:
-      CF_TOKEN: ${{ inputs.cf_token }}
-      CF_ACTION: ${{ inputs.action }}
+      CF_TOKEN: ${{ secrets.CF_TOKEN }}
     steps:
-      - name: Mask token
-        if: ${{ inputs.cf_token != '' }}
-        run: echo "::add-mask::$CF_TOKEN"
+      - name: Check the secret is present
+        if: ${{ inputs.action != 'verify' }}
+        run: |
+          if [ -z "$CF_TOKEN" ]; then
+            echo "secrets.CF_TOKEN is not set. Add it under Settings > Secrets and variables > Actions, then re-run."
+            exit 1
+          fi
 
       - name: Resolve zone id for tsh87.com
         if: ${{ inputs.action != 'verify' }}
