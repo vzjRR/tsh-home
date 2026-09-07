@@ -5,14 +5,15 @@
 #   - tsh87.com / www.tsh87.com currently resolve to a Cloudflare Pages
 #     project (a plain proxied CNAME, not a Workers Route or Custom Domain)
 #     that serves both the old placeholder homepage and /medical.
-#   - Al Ghafri Medical Solutions is moving to its own subdomain,
-#     med.tsh87.com (same Pages project, just a second hostname pointed at
-#     it - no code change on that side).
+#   - Al Ghafri Medical Solutions is staying on its current build (the "tsh"
+#     Pages project's /medical route) but appears at med.tsh87.com's root.
+#     This Worker answers med.tsh87.com too (a second Workers Custom Domain
+#     hostname) and proxies "/" there to "/medical" on that Pages project.
 #   - tsh87.com / www.tsh87.com then get repointed at this Worker via a
 #     Workers Custom Domain (not a Route - there was never an existing Route
 #     to split by path, so that earlier plan didn't apply).
 #   - worker/index.ts 301s any /medical* request it still receives (old
-#     bookmarks/links) to the same path on med.tsh87.com.
+#     bookmarks/links), prefix stripped, to med.tsh87.com.
 #
 # See README.md § Deployment for the exact, ordered steps.
 #
@@ -26,6 +27,13 @@ main = "worker/index.ts"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+# Without this, Cloudflare serves any request matching a static file straight
+# from the assets store, bypassing fetch() entirely - which would make "/"
+# always resolve to the portfolio's index.html regardless of hostname,
+# breaking the med.tsh87.com proxy above. Forcing the Worker to run first
+# means every request is decided by fetch() below; it calls
+# env.ASSETS.fetch() itself once it knows the request is for the portfolio.
+run_worker_first = true
 
 # This site reaches tsh87.com through a Workers Custom Domain bound in the
 # Cloudflare dashboard (Workers & Pages > tsh-home > Settings > Domains &
