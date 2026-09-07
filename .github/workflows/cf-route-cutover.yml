@@ -59,11 +59,11 @@ jobs:
 
           echo "== Pages projects on the account =="
           PAGES_JSON=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
-            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects?per_page=50")
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects")
           if echo "$PAGES_JSON" | jq -e '.success == true' > /dev/null 2>&1; then
-            echo "$PAGES_JSON" | jq '[.result[] | {name, domains}]'
+            echo "$PAGES_JSON" | jq '[.result[] | {name, domains, production_branch}]'
           else
-            echo "Pages API call did not succeed — likely the token has no Pages permission. Raw response:"
+            echo "Pages API call did not succeed. Raw response:"
             echo "$PAGES_JSON" | jq '.' 2>/dev/null || echo "$PAGES_JSON"
           fi
 
