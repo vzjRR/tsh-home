@@ -12,15 +12,16 @@
  *   request under `/medical` here is an old link - redirect it, with that
  *   prefix stripped, to med.tsh87.com rather than letting it 404.
  *
- * - med.tsh87.com: Al Ghafri Medical Solutions. It's staying on its current
- *   build - the "tsh" Pages project's /medical route - just needs to appear
- *   at this subdomain's root instead of nested under /medical. So this host
- *   proxies straight to that Pages project, rewriting "/" to "/medical" and
- *   passing every other path through unchanged (its static assets are
- *   already domain-root-relative, so they resolve correctly either way).
- *   The Host header sent upstream is forced to tsh87.com - the Next.js app
- *   only renders the real page for that Host, and shows a placeholder for
- *   anything else (including its own tsh-5hp.pages.dev hostname).
+ * - med.tsh87.com: Al Ghafri Medical Solutions' new home. Its current build
+ *   (the "tsh" Pages project's /medical route) turns out to only render its
+ *   real content for Host: tsh87.com exactly - every other hostname it sees,
+ *   including a genuine, fully-activated custom domain pointed straight at
+ *   it, gets a placeholder page instead. Neither an explicit Host header
+ *   override nor Cloudflare's resolveOverride mechanism can work around
+ *   that from here (the header override is silently dropped, and
+ *   resolveOverride isn't supported against Pages projects - both tried and
+ *   confirmed). So this host answers with a plain holding response until
+ *   that app's own configuration is updated to recognize med.tsh87.com too.
  */
 
 import { onRequestGet as contactGet, onRequestPost as contactPost } from '../functions/api/contact';
@@ -44,8 +45,28 @@ interface Env extends FormEnv {
 }
 
 const MEDICAL_HOST = 'med.tsh87.com';
-const MEDICAL_ORIGIN = 'tsh-5hp.pages.dev';
-const MEDICAL_ORIGIN_HOST = 'tsh87.com';
+
+const MEDICAL_HOLDING_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Al Ghafri Medical Solutions</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; background: #0b0b0b; color: #eee; margin: 0;
+         display: flex; min-height: 100vh; align-items: center; justify-content: center; text-align: center; }
+  main { max-width: 32rem; padding: 2rem; }
+  h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>Al Ghafri Medical Solutions</h1>
+<p>This platform is moving to this address. Please check back shortly.</p>
+</main>
+</body>
+</html>
+`;
 
 export default {
   async fetch(request: Request, env: Env, ctx: MinimalExecutionContext): Promise<Response> {
@@ -53,18 +74,9 @@ export default {
     const { pathname } = url;
 
     if (url.hostname === MEDICAL_HOST) {
-      const upstream = new URL(request.url);
-      upstream.protocol = 'https:';
-      upstream.hostname = MEDICAL_ORIGIN;
-      upstream.port = '';
-      if (upstream.pathname === '/') upstream.pathname = '/medical';
-      const headers = new Headers(request.headers);
-      headers.set('host', MEDICAL_ORIGIN_HOST);
-      return fetch(upstream.toString(), {
-        method: request.method,
-        headers,
-        body: request.body,
-        redirect: 'manual',
+      return new Response(MEDICAL_HOLDING_PAGE, {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8' },
       });
     }
 
