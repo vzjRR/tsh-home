@@ -1,0 +1,91 @@
+name: Cloudflare route cutover (manual, one-off)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cf_token:
+        description: "Cloudflare API token (Workers Scripts:Edit + Workers Routes:Edit on tsh87.com). Not needed for 'verify'."
+        required: false
+        type: string
+      action:
+        description: What to do
+        required: true
+        type: choice
+        options:
+          - inspect
+          - narrow-existing-to-medical
+          - verify
+        default: inspect
+
+jobs:
+  cutover:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ inputs.cf_token }}
+      CF_ACTION: ${{ inputs.action }}
+    steps:
+      - name: Mask token
+        if: ${{ inputs.cf_token != '' }}
+        run: echo "::add-mask::$CF_TOKEN"
+
+      - name: Resolve zone id for tsh87.com
+        if: ${{ inputs.action != 'verify' }}
+        run: |
+          set -euo pipefail
+          ZONE_JSON=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/zones?name=tsh87.com")
+          echo "$ZONE_JSON" | jq -e '.success == true' > /dev/null || { echo "Zone lookup failed"; echo "$ZONE_JSON"; exit 1; }
+          ZONE_ID=$(echo "$ZONE_JSON" | jq -r '.result[0].id')
+          if [ -z "$ZONE_ID" ] || [ "$ZONE_ID" = "null" ]; then echo "No zone found for tsh87.com"; exit 1; fi
+          echo "ZONE_ID=$ZONE_ID" >> "$GITHUB_ENV"
+          echo "Zone id resolved (not printed)."
+
+      - name: List current Workers Routes for the zone
+        if: ${{ inputs.action == 'inspect' }}
+        run: |
+          set -euo pipefail
+          echo "Current Workers Routes on tsh87.com:"
+          curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" | jq '.result'
+
+      - name: Narrow the existing tsh87 worker's route to /medical*
+        if: ${{ inputs.action == 'narrow-existing-to-medical' }}
+        run: |
+          set -euo pipefail
+          ROUTES_JSON=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes")
+          echo "$ROUTES_JSON" | jq -e '.success == true' > /dev/null || { echo "Route list failed"; echo "$ROUTES_JSON"; exit 1; }
+
+          ROUTE_ID=$(echo "$ROUTES_JSON" | jq -r '[.result[] | select(.script=="tsh87")][0].id // empty')
+          OLD_PATTERN=$(echo "$ROUTES_JSON" | jq -r '[.result[] | select(.script=="tsh87")][0].pattern // empty')
+
+          if [ -z "$ROUTE_ID" ]; then
+            echo "No route bound to script 'tsh87' was found. Making no change. Existing routes:"
+            echo "$ROUTES_JSON" | jq '.result'
+            exit 1
+          fi
+
+          echo "Found route $ROUTE_ID currently: '$OLD_PATTERN' -> tsh87"
+          echo "Updating its pattern to tsh87.com/medical*"
+
+          UPDATE_JSON=$(curl -sS -X PUT -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes/$ROUTE_ID" \
+            --data '{"pattern":"tsh87.com/medical*","script":"tsh87"}')
+
+          echo "$UPDATE_JSON" | jq '.'
+          echo "$UPDATE_JSON" | jq -e '.success == true' > /dev/null || { echo "Update failed"; exit 1; }
+          echo "Route narrowed successfully: tsh87 now serves tsh87.com/medical* only."
+
+      - name: Verify the live domain
+        if: ${{ inputs.action == 'verify' }}
+        run: |
+          set -euo pipefail
+          echo "GET https://tsh87.com/"
+          curl -sS -o /tmp/root.html -w "  http_code=%{http_code}\n" https://tsh87.com/
+          echo "  first 300 chars:"
+          head -c 300 /tmp/root.html; echo
+          echo
+          echo "GET https://tsh87.com/medical"
+          curl -sS -o /tmp/medical.html -w "  http_code=%{http_code}\n" https://tsh87.com/medical
+          echo "  first 300 chars:"
+          head -c 300 /tmp/medical.html; echo
