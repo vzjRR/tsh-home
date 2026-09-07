@@ -27,7 +27,7 @@ jobs:
             exit 1
           fi
 
-      - name: Resolve zone id for tsh87.com
+      - name: Resolve zone and account id for tsh87.com
         if: ${{ inputs.action != 'verify' }}
         run: |
           set -euo pipefail
@@ -35,17 +35,24 @@ jobs:
             "https://api.cloudflare.com/client/v4/zones?name=tsh87.com")
           echo "$ZONE_JSON" | jq -e '.success == true' > /dev/null || { echo "Zone lookup failed"; echo "$ZONE_JSON"; exit 1; }
           ZONE_ID=$(echo "$ZONE_JSON" | jq -r '.result[0].id')
+          ACCOUNT_ID=$(echo "$ZONE_JSON" | jq -r '.result[0].account.id')
           if [ -z "$ZONE_ID" ] || [ "$ZONE_ID" = "null" ]; then echo "No zone found for tsh87.com"; exit 1; fi
           echo "ZONE_ID=$ZONE_ID" >> "$GITHUB_ENV"
-          echo "Zone id resolved (not printed)."
+          echo "ACCOUNT_ID=$ACCOUNT_ID" >> "$GITHUB_ENV"
+          echo "Zone and account id resolved (not printed)."
 
-      - name: List current Workers Routes for the zone
+      - name: List current Workers Routes and Custom Domains for tsh87.com
         if: ${{ inputs.action == 'inspect' }}
         run: |
           set -euo pipefail
-          echo "Current Workers Routes on tsh87.com:"
+          echo "== Classic Workers Routes on the zone =="
           curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" | jq '.result'
+          echo
+          echo "== Workers Custom Domains on the account, filtered to tsh87.com =="
+          curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/domains?zone_id=$ZONE_ID" \
+            | jq '.result'
 
       - name: Narrow the existing tsh87 worker's route to /medical*
         if: ${{ inputs.action == 'narrow-existing-to-medical' }}
