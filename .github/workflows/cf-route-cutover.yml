@@ -41,7 +41,7 @@ jobs:
           echo "ACCOUNT_ID=$ACCOUNT_ID" >> "$GITHUB_ENV"
           echo "Zone and account id resolved (not printed)."
 
-      - name: List current Workers Routes and Custom Domains for tsh87.com
+      - name: List Routes, Workers Custom Domains, and Pages projects
         if: ${{ inputs.action == 'inspect' }}
         run: |
           set -euo pipefail
@@ -49,10 +49,15 @@ jobs:
           curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" | jq '.result'
           echo
-          echo "== Workers Custom Domains on the account, filtered to tsh87.com =="
+          echo "== Workers Custom Domains on the account, filtered to this zone =="
           curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/domains?zone_id=$ZONE_ID" \
             | jq '.result'
+          echo
+          echo "== Pages projects on the account, name + domains only =="
+          curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects?per_page=50" \
+            | jq '[.result[] | {name, domains, production_branch, source_type: .source.type, deployment_configs_production_compatibility_date: .deployment_configs.production.compatibility_date}]'
 
       - name: Narrow the existing tsh87 worker's route to /medical*
         if: ${{ inputs.action == 'narrow-existing-to-medical' }}
