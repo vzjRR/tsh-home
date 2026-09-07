@@ -1,17 +1,23 @@
 /**
  * The Worker entry point.
  *
- * Al Ghafri Medical Solutions used to live at `tsh87.com/medical` and now has
- * its own subdomain, `med.tsh87.com`, with the platform itself at that
- * subdomain's root rather than nested under /medical. Any request under
- * `/medical` here is an old link - redirect it to the same path with the
- * `/medical` prefix stripped, on the new domain, rather than letting it 404.
+ * This one script answers two Workers Custom Domain hostnames:
  *
- * Everything else that isn't that redirect or `/api/contact`/`/api/subscribe`
- * is a static asset, served straight from the `ASSETS` binding (the built
- * `dist/`). The two form routes are handled by the same logic that used to run
- * as Cloudflare Pages Functions - `functions/api/*.ts` - unchanged, just called
- * directly instead of through the Pages Functions router.
+ * - tsh87.com / www.tsh87.com: the portfolio itself. Everything that isn't
+ *   the /medical redirect below or /api/contact`/`/api/subscribe is a static
+ *   asset, served straight from the `ASSETS` binding (the built `dist/`). The
+ *   two form routes are handled by the same logic that used to run as
+ *   Cloudflare Pages Functions - `functions/api/*.ts` - unchanged, just
+ *   called directly instead of through the Pages Functions router. Any
+ *   request under `/medical` here is an old link - redirect it, with that
+ *   prefix stripped, to med.tsh87.com rather than letting it 404.
+ *
+ * - med.tsh87.com: Al Ghafri Medical Solutions. It's staying on its current
+ *   build - the "tsh" Pages project's /medical route - just needs to appear
+ *   at this subdomain's root instead of nested under /medical. So this host
+ *   proxies straight to that Pages project, rewriting "/" to "/medical" and
+ *   passing every other path through unchanged (its static assets are
+ *   already domain-root-relative, so they resolve correctly either way).
  */
 
 import { onRequestGet as contactGet, onRequestPost as contactPost } from '../functions/api/contact';
@@ -35,11 +41,22 @@ interface Env extends FormEnv {
 }
 
 const MEDICAL_HOST = 'med.tsh87.com';
+const MEDICAL_ORIGIN = 'tsh-5hp.pages.dev';
 
 export default {
   async fetch(request: Request, env: Env, ctx: MinimalExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const { pathname } = url;
+
+    if (url.hostname === MEDICAL_HOST) {
+      const upstream = new URL(request.url);
+      upstream.protocol = 'https:';
+      upstream.hostname = MEDICAL_ORIGIN;
+      upstream.port = '';
+      if (upstream.pathname === '/') upstream.pathname = '/medical';
+      return fetch(new Request(upstream.toString(), request));
+    }
+
     const context: PagesContext<Env> = { request, env, waitUntil: ctx.waitUntil.bind(ctx) };
 
     if (pathname === '/medical' || pathname.startsWith('/medical/')) {
