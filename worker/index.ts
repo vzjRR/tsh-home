@@ -18,6 +18,9 @@
  *   proxies straight to that Pages project, rewriting "/" to "/medical" and
  *   passing every other path through unchanged (its static assets are
  *   already domain-root-relative, so they resolve correctly either way).
+ *   The Host header sent upstream is forced to tsh87.com - the Next.js app
+ *   only renders the real page for that Host, and shows a placeholder for
+ *   anything else (including its own tsh-5hp.pages.dev hostname).
  */
 
 import { onRequestGet as contactGet, onRequestPost as contactPost } from '../functions/api/contact';
@@ -42,6 +45,7 @@ interface Env extends FormEnv {
 
 const MEDICAL_HOST = 'med.tsh87.com';
 const MEDICAL_ORIGIN = 'tsh-5hp.pages.dev';
+const MEDICAL_ORIGIN_HOST = 'tsh87.com';
 
 export default {
   async fetch(request: Request, env: Env, ctx: MinimalExecutionContext): Promise<Response> {
@@ -54,7 +58,14 @@ export default {
       upstream.hostname = MEDICAL_ORIGIN;
       upstream.port = '';
       if (upstream.pathname === '/') upstream.pathname = '/medical';
-      return fetch(new Request(upstream.toString(), request));
+      const headers = new Headers(request.headers);
+      headers.set('host', MEDICAL_ORIGIN_HOST);
+      return fetch(upstream.toString(), {
+        method: request.method,
+        headers,
+        body: request.body,
+        redirect: 'manual',
+      });
     }
 
     const context: PagesContext<Env> = { request, env, waitUntil: ctx.waitUntil.bind(ctx) };
