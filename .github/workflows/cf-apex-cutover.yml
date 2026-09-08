@@ -1,0 +1,117 @@
+name: Cloudflare apex cutover (one-off)
+
+# Points tsh87.com + www.tsh87.com at the tsh-home Worker and removes every
+# leftover binding that ties this Worker to the old site or the medical
+# subdomain. Safe to re-run; each step is idempotent.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: What to do
+        required: true
+        type: choice
+        options:
+          - inspect
+          - cutover
+          - set-secret
+          - verify
+        default: inspect
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve zone and account id
+        if: ${{ inputs.action != 'verify' }}
+        run: |
+          set -euo pipefail
+          Z=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=tsh87.com")
+          echo "$Z" | jq -e '.success == true' >/dev/null || { echo "$Z"; exit 1; }
+          echo "ZONE_ID=$(echo "$Z" | jq -r '.result[0].id')" >> "$GITHUB_ENV"
+          echo "ACCOUNT_ID=$(echo "$Z" | jq -r '.result[0].account.id')" >> "$GITHUB_ENV"
+
+      - name: Inspect routes and custom domains
+        if: ${{ inputs.action == 'inspect' }}
+        run: |
+          set -euo pipefail
+          echo "== Worker routes on the zone =="
+          curl -sS -H "Authorization: Bearer $CF_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" | jq '.'
+          echo
+          echo "== Workers Custom Domains (this zone) =="
+          curl -sS -H "Authorization: Bearer $CF_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/domains?zone_id=$ZONE_ID" | jq '.result'
+
+      - name: Cutover
+        if: ${{ inputs.action == 'cutover' }}
+        run: |
+          set -euo pipefail
+          API="https://api.cloudflare.com/client/v4"
+          H=(-H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json")
+
+          echo "== 1. Delete any Worker route for the apex / www (leftover from the old site) =="
+          ROUTES=$(curl -sS "${H[@]}" "$API/zones/$ZONE_ID/workers/routes")
+          echo "$ROUTES" | jq -e '.success == true' >/dev/null || { echo "Cannot read routes:"; echo "$ROUTES" | jq '.errors'; exit 1; }
+          echo "$ROUTES" | jq -r '.result[] | select(.pattern | test("^(www\\.)?tsh87\\.com/")) | "\(.id) \(.pattern) -> \(.script)"' \
+            | while read -r id pattern arrow script; do
+                echo "Deleting route $pattern ($id -> $script)"
+                curl -sS -X DELETE "${H[@]}" "$API/zones/$ZONE_ID/workers/routes/$id" | jq -c '{success, errors}'
+              done
+          echo "$ROUTES" | jq -r '.result[] | select(.pattern | test("^(www\\.)?tsh87\\.com/") | not) | "kept: \(.pattern) -> \(.script)"'
+
+          echo
+          echo "== 2. Unbind med.tsh87.com from any Worker =="
+          DOMAINS=$(curl -sS "${H[@]}" "$API/accounts/$ACCOUNT_ID/workers/domains?zone_id=$ZONE_ID")
+          MED_ID=$(echo "$DOMAINS" | jq -r '.result[] | select(.hostname == "med.tsh87.com") | .id // empty')
+          if [ -n "$MED_ID" ]; then
+            echo "Removing med.tsh87.com custom domain ($MED_ID)"
+            curl -sS -X DELETE "${H[@]}" "$API/accounts/$ACCOUNT_ID/workers/domains/$MED_ID" | jq -c '{success, errors}'
+          else
+            echo "med.tsh87.com not bound to a Worker — nothing to do."
+          fi
+          MED_DNS=$(curl -sS "${H[@]}" "$API/zones/$ZONE_ID/dns_records?name=med.tsh87.com" | jq -r '.result[] | select(.content == "100::" or .content == "192.0.2.1") | .id // empty')
+          for d in $MED_DNS; do
+            echo "Removing orphaned med.tsh87.com placeholder DNS record ($d)"
+            curl -sS -X DELETE "${H[@]}" "$API/zones/$ZONE_ID/dns_records/$d" | jq -c '{success}'
+          done
+
+          echo
+          echo "== 3. Ensure tsh87.com + www.tsh87.com are Workers Custom Domains on tsh-home =="
+          for HOST in tsh87.com www.tsh87.com; do
+            R=$(curl -sS -X PUT "${H[@]}" "$API/accounts/$ACCOUNT_ID/workers/domains" \
+              --data "{\"hostname\":\"$HOST\",\"zone_id\":\"$ZONE_ID\",\"service\":\"tsh-home\",\"environment\":\"production\"}")
+            echo "$HOST: $(echo "$R" | jq -c '{success, errors}')"
+          done
+
+          echo
+          echo "== 4. Verify =="
+          sleep 10
+          for U in "https://tsh87.com/" "https://www.tsh87.com/" "https://tsh87.com/contact/"; do
+            echo "$U -> $(curl -sS -m 15 -o /dev/null -w '%{http_code}' "$U") $(curl -sS -m 15 "$U" | grep -oiE '<title>[^<]*</title>' | head -1)"
+          done
+
+      - name: Set IP_SALT secret
+        if: ${{ inputs.action == 'set-secret' }}
+        run: |
+          set -euo pipefail
+          SALT=$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 48)
+          echo "$SALT" | npx wrangler secret put IP_SALT
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_TOKEN }}
+
+      - name: Verify the live domain
+        if: ${{ inputs.action == 'verify' }}
+        run: |
+          set -euo pipefail
+          for U in "https://tsh87.com/" "https://www.tsh87.com/" "https://tsh87.com/contact/" "https://tsh87.com/medical"; do
+            code=$(curl -sS -m 15 -o /tmp/b.html -w '%{http_code}' -D /tmp/h.txt "$U")
+            echo "$U -> $code | $(grep -iE '^(x-powered-by|x-opennext|location):' /tmp/h.txt | tr -d '\r' | paste -sd' ' -) | $(grep -oiE '<title>[^<]*</title>' /tmp/b.html | head -1)"
+          done
+          echo
+          echo "med.tsh87.com -> $(curl -sS -m 15 -o /dev/null -w '%{http_code}' https://med.tsh87.com/ || true)"
