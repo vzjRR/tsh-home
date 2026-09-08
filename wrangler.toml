@@ -20,9 +20,11 @@ workers_dev = true
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-# Run the Worker's fetch() before the assets store for the form endpoints, so a
-# POST to /api/* is never short-circuited by the static handler.
-run_worker_first = ["/api/*"]
+# Run the Worker's fetch() before the assets store for every request, so the
+# form endpoints (/api/*) and the /medical redirect are never short-circuited
+# by the static handler. The Worker calls env.ASSETS.fetch() itself for
+# everything else.
+run_worker_first = true
 
 [[d1_databases]]
 binding = "DB"

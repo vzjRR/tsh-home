@@ -1,12 +1,19 @@
 /**
- * The Worker entry point for tsh87.com — the personal site, and nothing else.
+ * The Worker entry point for tsh87.com — the personal site.
  *
  * Everything that isn't `/api/contact` or `/api/subscribe` is a static asset,
  * served straight from the `ASSETS` binding (the built `dist/`). The two form
  * routes are handled by the same logic that used to run as Cloudflare Pages
  * Functions - `functions/api/*.ts` - unchanged, just called directly instead
  * of through the Pages Functions router.
+ *
+ * `/medical*` is a courtesy 301 to med.tsh87.com for old links. That is the
+ * only thing this Worker knows about the medical platform — it holds no
+ * medical content and never proxies it; med.tsh87.com is its own Cloudflare
+ * Pages site, unrelated to this one.
  */
+
+const MEDICAL_HOME = 'https://med.tsh87.com/';
 
 import { onRequestGet as contactGet, onRequestPost as contactPost } from '../functions/api/contact';
 import { onRequestGet as subscribeGet, onRequestPost as subscribePost } from '../functions/api/subscribe';
@@ -32,6 +39,10 @@ export default {
   async fetch(request: Request, env: Env, ctx: MinimalExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
     const context: PagesContext<Env> = { request, env, waitUntil: ctx.waitUntil.bind(ctx) };
+
+    if (pathname === '/medical' || pathname.startsWith('/medical/')) {
+      return Response.redirect(MEDICAL_HOME, 301);
+    }
 
     if (pathname === '/api/contact') {
       return request.method === 'POST' ? contactPost(context) : contactGet(context);
