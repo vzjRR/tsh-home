@@ -1,0 +1,34 @@
+name: Create med.tsh87.com DNS (one-off)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dns:
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CF_TOKEN }}
+    steps:
+      - name: Ensure med.tsh87.com CNAME -> medical-8pj.pages.dev (proxied)
+        run: |
+          set -euo pipefail
+          API="https://api.cloudflare.com/client/v4"
+          H=(-H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json")
+          Z=$(curl -sS "${H[@]}" "$API/zones?name=tsh87.com" | jq -r '.result[0].id')
+
+          EXIST=$(curl -sS "${H[@]}" "$API/zones/$Z/dns_records?name=med.tsh87.com")
+          ID=$(echo "$EXIST" | jq -r '.result[0].id // empty')
+          BODY='{"type":"CNAME","name":"med.tsh87.com","content":"medical-8pj.pages.dev","proxied":true}'
+
+          if [ -n "$ID" ]; then
+            echo "Updating existing record $ID"
+            curl -sS -X PUT "${H[@]}" "$API/zones/$Z/dns_records/$ID" --data "$BODY" | jq -c '{success, errors}'
+          else
+            echo "Creating record"
+            curl -sS -X POST "${H[@]}" "$API/zones/$Z/dns_records" --data "$BODY" | jq -c '{success, errors}'
+          fi
+
+          echo "Waiting for propagation..."
+          sleep 15
+          curl -sS -m 20 -D - -o /tmp/m.html "https://med.tsh87.com/" | grep -iE '^(HTTP|server|cf-ray)' || true
+          grep -oiE '<title>[^<]*</title>' /tmp/m.html | head -1 || true
