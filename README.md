@@ -21,7 +21,7 @@ behind it, a contact form and a newsletter.
 | **Astro** (static output) | The pages are content. Astro ships them as HTML with no framework runtime, and its content model means new work — and later articles or case studies — is data rather than components. |
 | **TypeScript** | The content model and the endpoints are typed, so a malformed entry fails the build instead of the page. |
 | **Hand-authored CSS** with a token layer | A utility framework would have produced a generic result. The design system is six files, scoped per component by Astro. |
-| **Cloudflare Worker (static assets) + D1** | The forms had to be real, and `/medical` on the same domain has to keep running on its own Worker untouched — see Deployment below. Two form routes and one small database, no third-party form service, no data leaving the account. |
+| **Cloudflare Worker (static assets) + D1** | The forms had to be real. One Worker serves the built `dist/` and answers the two form routes itself against a small D1 database — no third-party form service, no data leaving the account. |
 | **No UI framework, no animation library, no icon package** | Behaviour is ~7 KB of TypeScript; icons are inline SVG. |
 | **Self-hosted Geist / Geist Mono** | Latin subset, variable, 52 KB for both — no third-party font request on the critical path. |
 
@@ -84,95 +84,34 @@ success, so a bot learns nothing), field validation, then a per-sender rate
 limit — 3 messages and 5 sign-ups per hour. The sender's IP is never stored;
 only a salted hash of it, and only to make that limit possible.
 
-### Deployment — a Cloudflare Worker, not Pages
-
-This ships as a **Worker with static assets** (`wrangler deploy`), not Cloudflare
-Pages, for one reason: `tsh87.com/medical*` runs on an existing production
-Worker that must keep running exactly as it is, and splitting one zone by path
-between two Workers needs Cloudflare **Routes** — a Pages custom domain claims
-the whole hostname and cannot be scoped to a path.
+### Deployment — a Cloudflare Worker with static assets
 
 `worker/index.ts` is the entry point. It handles `/api/contact` and
 `/api/subscribe` itself (the same logic that used to run as Pages Functions)
 and serves everything else from the `ASSETS` binding — the built `dist/`.
-`wrangler.toml` declares the D1 binding and, commented out, the Route that
-actually puts the site on the domain.
+`wrangler.toml` declares the D1 binding. The Worker is named `tsh-home`; do not
+rename it to `tsh87`, which is a different, older Worker on the account.
 
-**Before the first deploy**, check `wrangler.toml`: `name = "tsh-home"`. Do not
-rename it to `tsh87` — that is the existing production Worker's name, and
-deploying under the same name overwrites it.
+`tsh87.com` and `www.tsh87.com` reach this Worker through Workers Custom
+Domains, set in the dashboard (Workers & Pages → tsh-home → Settings → Domains
+& Routes). This project owns those two hostnames and nothing else on the zone.
 
-#### Going live, in order
+#### First-time setup
 
-The cutover moves `tsh87.com`'s catch-all route from the existing Worker to
-this one, while giving the existing Worker a narrower route so `/medical`
-keeps working. Cloudflare resolves a request to whichever matching route is
-more specific, so `/medical*` always wins over `/*` regardless of which
-Worker holds which — but the two edits still have to happen in this order, or
-`/medical` briefly has no route at all:
+1. **Authenticate** — `npx wrangler login`, or set `CLOUDFLARE_API_TOKEN`
+   (the "Edit Cloudflare Workers" template covers it).
+2. **Deploy** — `npm run deploy` (builds `dist/`, then `wrangler deploy`).
+3. **Apply the schema** — `npx wrangler d1 execute tsh87-site --remote --file db/schema.sql`.
+   Idempotent, safe to re-run.
+4. **Set the secret** — `npx wrangler secret put IP_SALT` (any long random
+   string). `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are optional — set both
+   and every submission also arrives on Telegram.
+5. **Bind the custom domains** — add `tsh87.com` and `www.tsh87.com` as Workers
+   Custom Domains on the `tsh-home` Worker.
+6. **Verify** — the home page, `/contact`, and both forms.
 
-1. **Authenticate wrangler** from a machine or session that has it —
-   `npx wrangler login`, or set `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit,
-   Workers Routes: Edit for the `tsh87.com` zone).
-2. **Deploy this Worker first, without its route** — `npm run deploy` with the
-   `routes` line in `wrangler.toml` still commented out. This puts `tsh-home`
-   live on its own `*.workers.dev` URL with nothing pointed at it yet, so it
-   can be checked before it touches the domain.
-3. **Bind the database and secrets**, via the dashboard (Workers & Pages →
-   tsh-home → Settings) or the CLI:
-   - **D1**: bind `DB` → `tsh87-site` (`wrangler.toml` already declares this,
-     so a dashboard-created Worker only needs it if the binding didn't carry
-     over — check Settings → Bindings first).
-   - **Apply the schema** — `npx wrangler d1 execute tsh87-site --remote --file db/schema.sql`.
-     Idempotent, safe to re-run.
-   - **Secrets** — `npx wrangler secret put IP_SALT` (any long random string;
-     this is the one that matters). `TELEGRAM_BOT_TOKEN` and
-     `TELEGRAM_CHAT_ID` are optional — set both and every submission also
-     arrives on Telegram.
-4. **Check the `*.workers.dev` URL.** Confirm the home page, `/contact`, and
-   both forms work before touching the domain.
-5. **On the existing "tsh87" Worker**, in the dashboard, narrow its route from
-   `tsh87.com/*` to `tsh87.com/medical*`. Nothing changes for visitors yet —
-   `/medical` still resolves to it, and everything else briefly has no route.
-6. **Uncomment the `routes` block in `wrangler.toml`** and redeploy
-   (`npm run deploy`). This Worker now claims `tsh87.com/*`; combined with
-   step 5, `/medical*` still resolves to the existing Worker (more specific
-   pattern wins) and every other path lands here.
-7. **Verify on the real domain**: the home page, `/contact`, both forms, and
-   — the one that actually matters — `tsh87.com/medical` still serving the
-   clinical platform unchanged.
-
-#### Fallback: if the path split causes problems for the medical platform
-
-Decided in advance, so it's a checklist and not a decision made mid-incident.
-If step 5 or 6 above breaks anything on `/medical` — a redirect that assumes
-it owns the root, a cookie scoped oddly, anything — **don't debug it under a
-live domain**. Reverse the split instead:
-
-1. **Revert the existing Worker's route** back to `tsh87.com/*`. This alone
-   restores the medical platform to exactly how it was before any of this —
-   nothing about that Worker or its code needs to change.
-2. **Give it a subdomain instead**: add `med.tsh87.com` as a second custom
-   domain / route on that same existing Worker, pointing at the same
-   unmodified code. It keeps serving what it already serves — reachable at
-   `med.tsh87.com/medical` with no changes on its side at all. (Optional
-   later cleanup, not required for it to work: that app's own `medicalPath`
-   config could be pointed at `/` so it serves from `med.tsh87.com` root
-   instead of `med.tsh87.com/medical` — that is a change to the *other*
-   project, not this one.)
-3. **This Worker (`tsh-home`) then claims all of `tsh87.com`** — no route
-   split, no specificity to reason about, nothing shared with the other
-   Worker at all.
-
-This fallback needs no code change in this repository — steps 1 and 2 are
-Cloudflare dashboard actions on the *other* Worker. The only change here is
-step 3, which is the same `routes` line already in `wrangler.toml`, just
-uncontested this time.
-
-Nothing is committed but the schema. No key, token or salt is in this repo,
-and this repository's own tooling (the Cloudflare MCP connector used to build
-it, and the `wrangler` CLI in this environment) has no deploy or Route/DNS
-access — steps 1, 5 and 6 need to be run from somewhere that does.
+After that, pushes to the deployment branch build and deploy through
+`.github/workflows/deploy.yml` (needs the `CF_TOKEN` Actions secret).
 
 ### Reading what comes in
 

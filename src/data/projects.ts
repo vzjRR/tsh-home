@@ -72,7 +72,7 @@ export const projects: Project[] = [
     technologies: ['Next.js', 'TypeScript', 'Cloudflare Workers', 'D1', 'Prisma', 'PWA'],
     status: 'Live',
     featured: true,
-    liveUrl: 'https://tsh87.com/medical',
+    liveUrl: 'https://medical-8pj.pages.dev',
     diagram: {
       layers: [
         { label: 'Client', nodes: ['Installable PWA', 'Tools compute locally'] },

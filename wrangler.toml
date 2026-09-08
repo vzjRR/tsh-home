@@ -1,24 +1,16 @@
-# Cloudflare Worker configuration.
+# Cloudflare Worker configuration for tsh87.com — the personal site.
 #
-# Deployment plan for tsh87.com:
+# This Worker serves the built portfolio (dist/) from the ASSETS binding and
+# handles the two form endpoints (/api/contact, /api/subscribe) itself, against
+# the D1 database bound as DB. It has nothing to do with any other project on
+# the account.
 #
-#   - tsh87.com / www.tsh87.com currently resolve to a Cloudflare Pages
-#     project (a plain proxied CNAME, not a Workers Route or Custom Domain)
-#     that serves both the old placeholder homepage and /medical.
-#   - Al Ghafri Medical Solutions is staying on its current build (the "tsh"
-#     Pages project's /medical route) but appears at med.tsh87.com's root.
-#     This Worker answers med.tsh87.com too (a second Workers Custom Domain
-#     hostname) and proxies "/" there to "/medical" on that Pages project.
-#   - tsh87.com / www.tsh87.com then get repointed at this Worker via a
-#     Workers Custom Domain (not a Route - there was never an existing Route
-#     to split by path, so that earlier plan didn't apply).
-#   - worker/index.ts 301s any /medical* request it still receives (old
-#     bookmarks/links), prefix stripped, to med.tsh87.com.
+# tsh87.com and www.tsh87.com reach this Worker through Workers Custom Domains
+# bound in the Cloudflare dashboard (Workers & Pages > tsh-home > Settings >
+# Domains & Routes), not through a `routes` entry here.
 #
-# See README.md § Deployment for the exact, ordered steps.
-#
-# IMPORTANT: `name` below must stay different from the existing production
-# Worker's name ("tsh87") - deploying under the same name overwrites it.
+# IMPORTANT: `name` below must stay "tsh-home". "tsh87" is a different, older
+# Worker on the account - deploying under that name would overwrite it.
 
 name = "tsh-home"
 compatibility_date = "2026-09-01"
@@ -27,18 +19,9 @@ main = "worker/index.ts"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-# Without this, Cloudflare serves any request matching a static file straight
-# from the assets store, bypassing fetch() entirely - which would make "/"
-# always resolve to the portfolio's index.html regardless of hostname,
-# breaking the med.tsh87.com proxy above. Forcing the Worker to run first
-# means every request is decided by fetch() below; it calls
-# env.ASSETS.fetch() itself once it knows the request is for the portfolio.
-run_worker_first = true
-
-# This site reaches tsh87.com through a Workers Custom Domain bound in the
-# Cloudflare dashboard (Workers & Pages > tsh-home > Settings > Domains &
-# Routes), not through a `routes` entry here - Custom Domains aren't
-# configurable from wrangler.toml.
+# Run the Worker's fetch() before the assets store for the form endpoints, so a
+# POST to /api/* is never short-circuited by the static handler.
+run_worker_first = ["/api/*"]
 
 [[d1_databases]]
 binding = "DB"
